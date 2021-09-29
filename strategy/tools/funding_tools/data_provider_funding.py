@@ -1,7 +1,4 @@
-import sys
-sys.path.insert(1, '../abstract_tools/')
-
-from abstract_data_provider import AbstractDataProvider
+from tools.abstact_tools.abstract_data_provider import AbstractDataProvider
 from connectors import ConnectorRouter
 
 class DataProviderFunding(AbstractDataProvider):
