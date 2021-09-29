@@ -9,5 +9,5 @@ class AbstractStrategy:
         self.data_provider = data_provider
 
     @abstractmethod
-    def decide(self) -> list:
+    def decide(self) -> dict:
         raise NotImplementedError
