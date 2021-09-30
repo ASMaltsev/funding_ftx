@@ -19,4 +19,4 @@ stratery = StrateryFunding(data_provider, client)
 while True:
     actions = stratery.decide()
     executor.execute(actions)
-    time.sleep(10)
+    time.sleep(60*60*3)
