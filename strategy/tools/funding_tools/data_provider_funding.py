@@ -1,4 +1,4 @@
-from tools.abstract_tools.abstract_data_provider import AbstractDataProvider
+from strategy.tools.abstract_tools.abstract_data_provider import AbstractDataProvider
 from connectors import ConnectorRouter
 
 class DataProviderFunding(AbstractDataProvider):
