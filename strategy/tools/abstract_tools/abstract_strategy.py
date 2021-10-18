@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from abstract_data_provider import AbstractDataProvider
+from strategy.tools.abstract_tools.abstract_data_provider import AbstractDataProvider
 
 
 class AbstractStrategy:
