@@ -40,5 +40,4 @@ if __name__ == '__main__':
         finally:
             # make risk control
             pass
-
         time.sleep(60 * 60 * 3)
