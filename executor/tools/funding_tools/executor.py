@@ -1,6 +1,6 @@
 from executor.tools.abstract_tools.abstract_executor import AbstractExecutor
 from executor.tools.funding_tools.parser_actions import ParserActions
-from executor.tools.funding_tools.executor_data_provider import ExecutorDataProvider
+from executor.tools.funding_tools.binance_data_provider import ExecutorDataProvider
 
 
 class FundingExecutor(AbstractExecutor):
