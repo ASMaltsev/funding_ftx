@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
 
-class AbstractStrategyDataProvider(ABC):
+class AbstractAlphaDataProvider(ABC):
     """DataProvider interface for strategy"""
     pass

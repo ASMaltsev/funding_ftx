@@ -1,7 +1,7 @@
 from abc import abstractmethod
 
 
-class AbstractStrategy:
+class AbstractAlpha:
     """Strategy interface"""
 
     @abstractmethod
