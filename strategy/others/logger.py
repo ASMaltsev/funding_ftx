@@ -18,7 +18,7 @@ class Logger:
         self.name = name
 
     def create(self):
-        logger = logging.getLogger('logger')
+        logger = logging.getLogger(self.name)
         logger.setLevel(logging.DEBUG)
 
         handler_stream = logging.StreamHandler()
@@ -26,7 +26,7 @@ class Logger:
         handler_file = logging.FileHandler(f'{self.name}.log')
         handler_file.setLevel(logging.DEBUG)
 
-        strfmt = '%(asctime)s.%(msecs)06d  %(levelname)s  %(message)s'
+        strfmt = '%(asctime)s.%(msecs)06d  %(levelname)s [%(name)s]  %(message)s'
         datefmt = '%Y-%m-%d %H:%M:%S'
 
         formatter = logging.Formatter(fmt=strfmt, datefmt=datefmt)
