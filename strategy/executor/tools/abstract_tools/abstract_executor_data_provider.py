@@ -14,12 +14,6 @@ class AbstractExecutorDataProvider(ABC):
         self.secret_key = secret_key
 
     @abstractmethod
-    def get_max_limit(self) -> int:
-        """
-        @return: return max limit for 1 minutes
-        """
-
-    @abstractmethod
     def make_limit_order(self, ticker: str, side: str, price: float, quantity: float, reduce_only: bool) \
             -> Tuple[int, str]:
         """
