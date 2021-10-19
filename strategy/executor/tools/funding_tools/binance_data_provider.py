@@ -10,7 +10,7 @@ from strategy.executor.tools.abstract_tools import AbstractExecutorDataProvider
 logger = Logger('DataProviderExecutor').create()
 
 
-def control_rpc(current_rpc, max_rpc) -> bool:
+def _control_rpc(current_rpc, max_rpc) -> bool:
     """
     @param current_rpc: current rpc
     @param max_rpc: maximum rpc
@@ -36,7 +36,7 @@ def update_rpc(func):
         args[0].current_rpc = args[0].connector.USED_RPC
         current_rpc = args[0].current_rpc
         max_rpc = args[0].max_rpc
-        warning_rpc = control_rpc(current_rpc, max_rpc)
+        warning_rpc = _control_rpc(current_rpc, max_rpc)
         args[0].warning_rpc = warning_rpc
         return func(*args, **kwargs)
 

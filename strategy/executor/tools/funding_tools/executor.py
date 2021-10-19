@@ -1,3 +1,5 @@
+import time
+
 from strategy.executor.tools.abstract_tools.abstract_executor import AbstractExecutor
 from strategy.executor.tools.funding_tools.parser_actions import ParserActions
 from strategy.executor.tools.funding_tools.binance_data_provider import BinanceDataProvider
@@ -22,7 +24,7 @@ class FundingExecutor(AbstractExecutor):
         swap_side = 'buy'
         futures_side = 'sell'
         reduce_only = True
-        total_amount = 0.09
+        total_amount = 0.08
 
         self._execute(
             market_ticker=ticker_futures,
@@ -33,6 +35,21 @@ class FundingExecutor(AbstractExecutor):
             total_amount=total_amount)
 
         return True
+
+    def _control_rpc(self):
+        if self.data_provider.warning_rpc:
+            time.sleep(30)
+
+    def _get_limit_amount(self, ticker: str) -> float:
+        """
+        @param ticker: pair name
+        @return: amount for one limit order
+        """
+        if ticker.startswith('BTC'):
+            return 0.002
+        if ticker.startswith('ETH'):
+            return 0.03
+        raise NotImplementedError
 
     def _execute(self, market_ticker: str, limit_ticker: str, limit_side: str, market_side: str,
                  total_amount: float, reduce_only: bool) -> bool:
@@ -77,6 +94,7 @@ class FundingExecutor(AbstractExecutor):
                     logger.info(msg='Finished.')
                     break
 
+                self._control_rpc()
                 order_status, order_id, price_limit_order, executed_qty = self.data_provider.make_safety_limit_order(
                     ticker=limit_ticker,
                     side=limit_side,
@@ -116,18 +134,9 @@ class FundingExecutor(AbstractExecutor):
                         if limit_qty == 0:
                             logger.info(msg='Finished.')
                             break
+
+                        self._control_rpc()
                         order_status, order_id, price_limit_order, executed_qty = \
                             self.data_provider.make_safety_limit_order(ticker=limit_ticker, side=limit_side,
                                                                        quantity=limit_qty, reduce_only=reduce_only)
         return True
-
-    def _get_limit_amount(self, ticker: str) -> float:
-        """
-        @param ticker: pair name
-        @return: amount for one limit order
-        """
-        if ticker.startswith('BTC'):
-            return 0.002
-        if ticker.startswith('ETH'):
-            return 0.01
-        raise NotImplementedError
