@@ -30,7 +30,7 @@ class FundingExecutor(AbstractExecutor):
         pos_limit_side = self.data_provider.get_amount_positions(limit_ticker)
         pos_market_side = self.data_provider.get_amount_positions(market_ticker)
 
-        logger.info(msg='Control positions.',
+        logger.info(msg=colored('Control positions.', 'green'),
                     extra=dict(pos_market_side=pos_market_side, pos_limit_side=pos_limit_side))
 
         current_position_limit = round(pos_limit_side - self.start_amount_limit, 5)
