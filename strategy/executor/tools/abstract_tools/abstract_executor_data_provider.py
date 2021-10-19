@@ -64,9 +64,9 @@ class AbstractExecutorDataProvider(ABC):
         """
 
     @abstractmethod
-    def get_order_status(self, ticker: str, order_id: int) -> str:
+    def get_order_status(self, ticker: str, order_id: int) -> Tuple[str, float]:
         """
         @param ticker: pair name (BTCUSDT, ETHUSDT...)
         @param order_id: order id
-        @return: order status (NEW, FILLED, EXPIRED, PARTIALLY_FILLED)
+        @return: order status (NEW, FILLED, EXPIRED, PARTIALLY_FILLED), executed quantity
         """
