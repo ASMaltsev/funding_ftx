@@ -115,6 +115,7 @@ class BinanceDataProvider(AbstractExecutorDataProvider):
     def _create_webosocket(self, ticker):
         if self.orderbook_ws is None:
             self.orderbook_ws = BinanceOrderBook(section=self.section, ticker=ticker)
+            self.orderbook_ws.daemon = True
             self.orderbook_ws.start()
         else:
             pass

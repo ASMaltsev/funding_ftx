@@ -6,10 +6,10 @@ secret_key = ''
 ticker_swap = 'ETHUSDT'
 ticker_futures = 'ETHUSDT_211231'
 
-swap_side = 'sell'
-futures_side = 'buy'
-reduce_only = True
-total_amount = 0.08
+swap_side = 'buy'
+futures_side = 'sell'
+reduce_only = False
+total_amount = 0.03
 
 FundingExecutor(api_key=api_key, secret_key=secret_key)._execute(
     market_ticker=ticker_futures,
