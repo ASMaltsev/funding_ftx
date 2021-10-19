@@ -1,3 +1,4 @@
-from strategy.alpha.tools.funding_tools.funding_alpha import FundingAlpha
+from strategy.alpha import FundingAlpha
+from strategy.executor import FundingExecutor
 
-__all__ = ['FundingAlpha']
+__all__ = ['FundingAlpha', 'FundingExecutor']
