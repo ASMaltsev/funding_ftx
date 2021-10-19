@@ -20,22 +20,6 @@ class FundingExecutor(AbstractExecutor):
         logger.info(msg='Executor is starting.')
         # parser = ParserActions(actions)
         # actions_for_execute = parser.parse()
-        ticker_swap = 'ETHUSDT'
-        ticker_futures = 'ETHUSDT_211231'
-
-        swap_side = 'buy'
-        futures_side = 'sell'
-        reduce_only = True
-        total_amount = 0.08
-
-        self._execute(
-            market_ticker=ticker_futures,
-            market_side=futures_side,
-            limit_ticker=ticker_swap,
-            limit_side=swap_side,
-            reduce_only=reduce_only,
-            total_amount=total_amount)
-
         return True
 
     def check_positions(self, limit_ticker, market_ticker, market_ticker_side):
