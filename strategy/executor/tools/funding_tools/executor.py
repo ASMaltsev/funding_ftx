@@ -62,7 +62,12 @@ class FundingExecutor(AbstractExecutor):
         market_amount = self.data_provider.get_amount_positions(market_ticker)
         logger.info(msg=colored('Current positions:', 'green'),
                     extra=dict(limit_amount=limit_amount, market_amount=market_amount,
-                               delta=limit_amount - market_amount))
+                               delta=limit_amount + market_amount))
+        logger.info(msg=colored('Current positions with correction on initial positions:', 'green'),
+                    extra=dict(limit_amount=limit_amount - self.start_amount_limit,
+                               market_amount=market_amount - self.start_amount_market,
+                               delta=(limit_amount - self.start_amount_limit) + (
+                                       market_amount - self.start_amount_market)))
 
     def _get_limit_amount(self, ticker: str) -> float:
         """
