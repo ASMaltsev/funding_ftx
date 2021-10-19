@@ -6,6 +6,7 @@ from connectors import ConnectorRouter
 import connectors.exceptions
 from strategy.others import Logger
 from strategy.executor.tools.abstract_tools import AbstractExecutorDataProvider
+from strategy.executor.tools.funding_tools.binance_orderbook_ws import BinanceOrderBook
 
 logger = Logger('DataProviderExecutor').create()
 
@@ -48,12 +49,13 @@ class BinanceDataProvider(AbstractExecutorDataProvider):
     def __init__(self, api_key: str, secret_key: str, section: str):
         super().__init__(api_key, secret_key)
         self.connector = ConnectorRouter(exchange='Binance', section=section).init_connector(api_key, secret_key)
-
+        self.section = section
         self._correct_coef = 1.3
         self._max_limit_coef = 0.8
         self.current_rpc = 0
         self.max_rpc = self._get_max_limit()
         self.warning_rpc = False
+        self.orderbook_ws = None
 
     def _get_max_limit(self) -> int:
         for type_limit in self.connector.get_exchange_info()['rateLimits']:
@@ -100,8 +102,22 @@ class BinanceDataProvider(AbstractExecutorDataProvider):
 
     @update_rpc
     def get_bbid_bask(self, ticker: str) -> Tuple[float, float]:
-        response = self.connector.get_bbid_bask(ticker=ticker)
-        return float(response.get('bidPrice', None)), float(response.get('askPrice', None))
+        """
+         response = self.connector.get_bbid_bask(ticker=ticker)
+         return float(response.get('bidPrice', None)), float(response.get('askPrice', None))
+        """
+        self._create_webosocket(ticker=ticker)
+        data = self.orderbook_ws.get_state()
+        while data is None:
+            data = self.orderbook_ws.get_state()
+        return float(data['b']), float(data['a'])
+
+    def _create_webosocket(self, ticker):
+        if self.orderbook_ws is None:
+            self.orderbook_ws = BinanceOrderBook(section=self.section, ticker=ticker)
+            self.orderbook_ws.start()
+        else:
+            pass
 
     @update_rpc
     def get_order_status(self, ticker: str, order_id: int) -> Tuple[str, float]:
@@ -170,3 +186,6 @@ class BinanceDataProvider(AbstractExecutorDataProvider):
             return 'sell'
         else:
             return NotImplementedError
+
+    def __del__(self):
+        del self.orderbook_ws

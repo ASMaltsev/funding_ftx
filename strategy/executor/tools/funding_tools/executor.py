@@ -98,7 +98,7 @@ class FundingExecutor(AbstractExecutor):
 
             logger.info(msg='Current position.', extra=dict(current_amount_qty=current_amount_qty))
 
-            delta = executed_qty - prev_executed_qty
+            delta = round(executed_qty - prev_executed_qty, precision)
             prev_executed_qty = executed_qty
 
             if order_status == 'FILLED':
@@ -139,7 +139,7 @@ class FundingExecutor(AbstractExecutor):
                                                                 order_id=order_id)
                     order_status, executed_qty = self.data_provider.get_order_status(ticker=limit_ticker,
                                                                                      order_id=order_id)
-                    delta = executed_qty - prev_executed_qty
+                    delta = round(executed_qty - prev_executed_qty, precision)
                     logger.debug(msg='Params canceled orders',
                                  extra=dict(order_status=order_status, executed_qty=executed_qty, delta=delta,
                                             is_cancel=is_cancel, order_id=order_id))
