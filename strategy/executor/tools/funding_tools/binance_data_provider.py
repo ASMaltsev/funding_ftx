@@ -186,6 +186,3 @@ class BinanceDataProvider(AbstractExecutorDataProvider):
             return 'sell'
         else:
             return NotImplementedError
-
-    def __del__(self):
-        del self.orderbook_ws
