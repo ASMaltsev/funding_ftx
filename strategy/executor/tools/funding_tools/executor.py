@@ -85,9 +85,14 @@ class FundingExecutor(AbstractExecutor):
     def _execute(self, market_ticker: str, limit_ticker: str, limit_side: str, market_side: str,
                  total_amount: float, reduce_only: bool) -> bool:
 
+        self.start_amount_limit = self.data_provider.get_amount_positions(limit_ticker)
+        self.start_amount_market = self.data_provider.get_amount_positions(market_ticker)
+
         logger.info(msg='Start shopping.',
                     extra=dict(market_ticker=market_ticker, market_side=market_side, limit_ticker=limit_ticker,
-                               limit_side=limit_side, total_amount=total_amount, reduce_only=reduce_only))
+                               limit_side=limit_side, total_amount=total_amount, reduce_only=reduce_only,
+                               start_amount_limit=self.start_amount_limit,
+                               start_amount_market=self.start_amount_market))
 
         current_amount_qty, prev_executed_qty = 0, 0
         min_size_market_order = self.data_provider.min_size_for_market_order(ticker=market_ticker)
