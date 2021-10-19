@@ -5,7 +5,9 @@ class CustomAdapter(logging.LoggerAdapter):
 
     def process(self, msg, kwargs):
         dict_kwargs = kwargs.get('extra', '')
-        line_kwargs = ', '.join(map(str, [f'{k} = {v}' for k, v in dict_kwargs.items()]))
+        line_kwargs = ''
+        if dict_kwargs != '':
+            line_kwargs = ', '.join(map(str, [f'{k} = {v}' for k, v in dict_kwargs.items()]))
         line = '%s %s' % (msg, line_kwargs)
 
         return line, kwargs
@@ -36,8 +38,3 @@ class Logger:
         logger.addHandler(handler_stream)
         adapter = CustomAdapter(logger, None)
         return adapter
-
-
-if __name__ == '__main__':
-    logs = Logger('tmp').create()
-    logs.info('info message', extra=dict(tmp=1, tmp2=2))
