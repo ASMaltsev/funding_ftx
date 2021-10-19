@@ -39,6 +39,7 @@ def update_rpc(func):
         warning_rpc = control_rpc(current_rpc, max_rpc)
         args[0].warning_rpc = warning_rpc
         return func(*args, **kwargs)
+
     return wrapper_rpc
 
 
