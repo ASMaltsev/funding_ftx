@@ -5,10 +5,18 @@ from strategy.others import Logger
 
 class FundingAlpha(AbstractAlpha):
 
-    def __init__(self):
-        self.provider_coin_m = DataProviderFunding(section='COIN-M')
-        self.provider_usdt_m = DataProviderFunding(section='USDT-M')
+    def __init__(self, section):
+
+        self.section = section
+        # if section == 'USDT-M':
+        #     self.provider_usdt_m = DataProviderFunding(section='USDT-M')
+        # elif section == 'COIN-M':
+        #     self.provider_coin_m = DataProviderFunding(section='COIN-M')
+        self.data_provider = DataProviderFunding(section=section)
+
         self.logger = Logger('strategy').create()
+
+        self.
 
     def decide(self) -> dict:
         bbid, bask = self.provider_usdt_m.get_bbid_bask('ETHUSDT')
