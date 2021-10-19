@@ -1,5 +1,5 @@
 import time
-
+import sys
 from strategy.executor.tools.abstract_tools.abstract_executor import AbstractExecutor
 from strategy.executor.tools.funding_tools.parser_actions import ParserActions
 from strategy.executor.tools.funding_tools.binance_data_provider import BinanceDataProvider
@@ -13,6 +13,8 @@ class FundingExecutor(AbstractExecutor):
     def __init__(self, api_key: str, secret_key: str):
         super().__init__(api_key, secret_key)
         self.data_provider = BinanceDataProvider(api_key, secret_key, 'USDT-M')
+        self.start_amount_limit = 0
+        self.start_amount_market = 0
 
     def execute(self, actions: dict) -> bool:
         logger.info(msg='Executor is starting.')
@@ -35,6 +37,35 @@ class FundingExecutor(AbstractExecutor):
             total_amount=total_amount)
 
         return True
+
+    def check_positions(self, limit_ticker, market_ticker, market_ticker_side):
+        self.data_provider.cancel_all_orders(limit_ticker)
+        self.data_provider.cancel_all_orders(market_ticker)
+        pos_limit_side = self.data_provider.get_amount_positions(limit_ticker)
+        pos_market_side = self.data_provider.get_amount_positions(market_ticker)
+
+        logger.info(msg='Control positions.',
+                    extra=dict(pos_market_side=pos_market_side, pos_limit_side=pos_limit_side))
+
+        current_position_limit = round(pos_limit_side - self.start_amount_limit, 5)
+        current_position_market = round(pos_market_side - self.start_amount_market, 5)
+
+        delta = round(abs(current_position_limit) - abs(current_position_market), 4)
+        logger.info(msg=f'CHECK POSITION.', extra=dict(delta=delta))
+        limit_amount = self._get_limit_amount(limit_ticker)
+        if 0 < delta <= limit_amount:
+            self.data_provider.make_safety_market_order(ticker=market_ticker,
+                                                        side=market_ticker_side,
+                                                        quantity=delta)
+        elif delta < 0 and abs(delta) <= limit_amount:
+            self.data_provider.make_safety_market_order(ticker=market_ticker,
+                                                        side=market_ticker_side,
+                                                        quantity=abs(delta))
+        elif delta == 0:
+            pass
+        else:
+            logger.error(msg="REBALANCE FALSE")
+            sys.exit(0)
 
     def _control_rpc(self):
         if self.data_provider.warning_rpc:
@@ -82,7 +113,7 @@ class FundingExecutor(AbstractExecutor):
             prev_executed_qty = executed_qty
 
             if order_status == 'FILLED':
-                logger.debug(msg='Make market order', extra=dict(ticker=market_ticker, quantity=delta))
+                logger.debug(msg='Make market order.', extra=dict(ticker=market_ticker, quantity=delta))
                 self.data_provider.make_safety_market_order(ticker=market_ticker, side=market_side,
                                                             quantity=delta,
                                                             min_size_order=min_size_market_order)
@@ -91,6 +122,8 @@ class FundingExecutor(AbstractExecutor):
                                   precision)
 
                 if limit_qty == 0:
+                    self.check_positions(limit_ticker=limit_ticker, market_ticker=market_ticker,
+                                         market_ticker_side=market_side)
                     logger.info(msg='Finished.')
                     break
 
@@ -132,6 +165,8 @@ class FundingExecutor(AbstractExecutor):
                             min(self._get_limit_amount(ticker=limit_ticker), total_amount - current_amount_qty),
                             precision)
                         if limit_qty == 0:
+                            self.check_positions(limit_ticker=limit_ticker, market_ticker=market_ticker,
+                                                 market_ticker_side=market_side)
                             logger.info(msg='Finished.')
                             break
 
