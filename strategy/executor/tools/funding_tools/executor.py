@@ -1,3 +1,5 @@
+from termcolor import colored
+
 import time
 import sys
 from strategy.executor.tools.abstract_tools.abstract_executor import AbstractExecutor
@@ -55,6 +57,13 @@ class FundingExecutor(AbstractExecutor):
         if self.data_provider.warning_rpc:
             time.sleep(30)
 
+    def _log_current_positions(self, limit_ticker, market_ticker):
+        limit_amount = self.data_provider.get_amount_positions(limit_ticker)
+        market_amount = self.data_provider.get_amount_positions(market_ticker)
+        logger.info(msg=colored('Current positions:', 'green'),
+                    extra=dict(limit_amount=limit_amount, market_amount=market_amount,
+                               delta=limit_amount - market_amount))
+
     def _get_limit_amount(self, ticker: str) -> float:
         """
         @param ticker: pair name
@@ -84,7 +93,7 @@ class FundingExecutor(AbstractExecutor):
         precision = abs(str(min_size_market_order).find('.') - len(str(min_size_market_order))) + 1
         limit_qty = round(min(self._get_limit_amount(ticker=limit_ticker), total_amount - current_amount_qty),
                           precision)
-
+        self._log_current_positions(limit_ticker, market_ticker)
         order_status, order_id, price_limit_order, executed_qty = self.data_provider.make_safety_limit_order(
             ticker=limit_ticker,
             side=limit_side,
@@ -117,6 +126,8 @@ class FundingExecutor(AbstractExecutor):
                     break
 
                 self._control_rpc()
+                self._log_current_positions(limit_ticker, market_ticker)
+
                 order_status, order_id, price_limit_order, executed_qty = self.data_provider.make_safety_limit_order(
                     ticker=limit_ticker,
                     side=limit_side,
@@ -160,6 +171,8 @@ class FundingExecutor(AbstractExecutor):
                             break
 
                         self._control_rpc()
+                        self._log_current_positions(limit_ticker, market_ticker)
+
                         order_status, order_id, price_limit_order, executed_qty = \
                             self.data_provider.make_safety_limit_order(ticker=limit_ticker, side=limit_side,
                                                                        quantity=limit_qty, reduce_only=reduce_only)
