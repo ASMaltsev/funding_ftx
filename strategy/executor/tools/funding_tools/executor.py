@@ -78,7 +78,7 @@ class FundingExecutor(AbstractExecutor):
             if ticker.startswith('BTC'):
                 return 0.002
             if ticker.startswith('ETH'):
-                return 0.02
+                return 0.03
             raise NotImplementedError
         elif section == 'COIN-M':
             if ticker.startswith('BTC'):
