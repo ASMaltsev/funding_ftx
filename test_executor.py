@@ -10,7 +10,7 @@ ticker_futures = 'ETHUSD_220325'
 swap_side = 'sell'
 futures_side = 'buy'
 reduce_only = False
-total_amount = 8983
+total_amount = 10
 
 FundingExecutor(api_key=api_key, secret_key=secret_key, section='COIN-M')._execute(
     market_ticker=ticker_futures,
