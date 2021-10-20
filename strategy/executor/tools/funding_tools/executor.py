@@ -30,6 +30,7 @@ class FundingExecutor(AbstractExecutor):
         self._log_current_positions(limit_ticker, market_ticker)
 
     def check_positions(self, limit_ticker, market_ticker, market_ticker_side, section):
+        max_coef_delta = 1.2
         self.data_provider.cancel_all_orders(limit_ticker)
         self.data_provider.cancel_all_orders(market_ticker)
         pos_limit_side = self.data_provider.get_amount_positions(limit_ticker)
@@ -44,11 +45,11 @@ class FundingExecutor(AbstractExecutor):
         delta = round(abs(current_position_limit) - abs(current_position_market), 4)
         logger.info(msg=f'CHECK POSITION.', extra=dict(delta=delta))
         limit_amount = self._get_limit_amount(limit_ticker, section=section)
-        if 0 < delta <= limit_amount:
+        if 0 < delta <= max_coef_delta * limit_amount:
             self.data_provider.make_safety_market_order(ticker=market_ticker,
                                                         side=market_ticker_side,
                                                         quantity=delta)
-        elif delta < 0 and abs(delta) <= limit_amount:
+        elif delta < 0 and abs(delta) <= max_coef_delta * limit_amount:
             self.data_provider.make_safety_market_order(ticker=market_ticker,
                                                         side=market_ticker_side,
                                                         quantity=abs(delta))
