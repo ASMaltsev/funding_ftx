@@ -15,8 +15,8 @@ class FundingAlpha(AbstractAlpha):
         self.base_fr_earn = base_fr_earn
         self.A = A
 
-        self.share_usdt =
-        self.share_coin =
+        # self.share_usdt =
+        # self.share_coin =
 
 
         self.list_coinm = list_coinm # ['ETHUSDT', 'BTCUSDT', 'ETHUSDT_211231', 'BTCUSDT_211231']
