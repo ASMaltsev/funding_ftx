@@ -1,18 +1,15 @@
 from strategy import FundingExecutor
 
-#YM
-api_key  = 'QRjSmxIXbjCujcDH4FFn9YobT9B0e52diGa68JbuAGCHUCoOqaq3Ppig4KhhX3i2'
-secret_key = 't4EFPmyOdhqxdMz27QUcikK4srXRrvmPgL4rlXWvFtrMR6bEjCAnXQIrhu8CFY79'
+api_key = 'IdPorsZNdskqCUNbO5aN0w6TY67Kfl0syZjHDV3ZP9tOMuM6k3KzovNizMKmBpix'
+secret_key = '7qE1lC0fVpNF7i9Lb08odC1HaV6m2LILmzy2SSEnAXTwqOVaJhqA8cVz1tzPzP0A'
 
+ticker_swap = 'ETHUSD_PERP'
+ticker_futures = 'ETHUSD_211231'
 
-
-ticker_swap = 'BTCUSD_PERP'
-ticker_futures = 'BTCUSD_211231'
-
-swap_side = 'sell'
-futures_side = 'buy'
+swap_side = 'buy'
+futures_side = 'sell'
 reduce_only = False
-total_amount = 4677
+total_amount = 3
 
 FundingExecutor(api_key=api_key, secret_key=secret_key, section='COIN-M')._execute(
     market_ticker=ticker_futures,
