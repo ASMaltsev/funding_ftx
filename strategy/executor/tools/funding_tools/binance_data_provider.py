@@ -11,26 +11,26 @@ from strategy.executor.tools.funding_tools.binance_orderbook_ws import BinanceOr
 logger = Logger('DataProviderExecutor').create()
 
 
-def _control_rpc(current_rpc, max_rpc) -> bool:
+def _control_rpc(current_rpc, max_rpc, connector) -> bool:
     """
     @param current_rpc: current rpc
     @param max_rpc: maximum rpc
     @return: Is warning rpc?
     """
     bad_rpc = False
-    while True:  # TODO: сделать динамическую проверку rpc
+    while True:
         if current_rpc > 0.9 * max_rpc:
-            # bad_rpc = True
-            sleep = 61
+            bad_rpc = True
+            sleep = 60
             logger.error(msg='You used all RPC. Sleep ',
                          extra=dict(current_rpc=current_rpc, max_rpc=max_rpc, sleep=sleep))
             time.sleep(sleep)
-            return False
-
+            connector.get_server_time()
+            current_rpc = connector.USED_RPC
         if 0.5 * max_rpc < current_rpc < 0.9 * max_rpc:
             logger.warning(msg='You used a lot of RPC', extra=dict(current_rpc=current_rpc, max_rpc=max_rpc))
-            # if not bad_rpc:
-            return True
+            if not bad_rpc:
+                return True
         return False
 
 
@@ -39,7 +39,7 @@ def update_rpc(func):
         args[0].current_rpc = args[0].connector.USED_RPC
         current_rpc = args[0].current_rpc
         max_rpc = args[0].max_rpc
-        warning_rpc = _control_rpc(current_rpc, max_rpc)
+        warning_rpc = _control_rpc(current_rpc, max_rpc, args[0].connector)
         args[0].warning_rpc = warning_rpc
         return func(*args, **kwargs)
 
@@ -134,7 +134,7 @@ class BinanceDataProvider(AbstractExecutorDataProvider):
         place a limit order at the best price
         @return: order status, orderId, price, executed quantity
         """
-        side_index = 1 if side == 'sell' else 0
+        side_index = 0 if side == 'sell' else 1
         while True:
             price = self.get_bbid_bask(ticker)[side_index]
             order_id, _ = self.make_limit_order(ticker=ticker, side=side, price=price, quantity=quantity,
