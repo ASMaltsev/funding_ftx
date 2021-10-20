@@ -12,11 +12,12 @@ logger = Logger('Executor').create()
 
 class FundingExecutor(AbstractExecutor):
 
-    def __init__(self, api_key: str, secret_key: str):
+    def __init__(self, api_key: str, secret_key: str, section: str):
         super().__init__(api_key, secret_key)
-        self.data_provider = BinanceDataProvider(api_key, secret_key, 'USDT-M')
+        self.data_provider = BinanceDataProvider(api_key, secret_key, section)
         self.start_amount_limit = 0
         self.start_amount_market = 0
+        self.section = section
 
     def execute(self, actions: dict) -> bool:
         logger.info(msg='Executor is starting.')
@@ -89,7 +90,6 @@ class FundingExecutor(AbstractExecutor):
 
     def _execute(self, market_ticker: str, limit_ticker: str, limit_side: str, market_side: str,
                  total_amount: float, reduce_only: bool, section: str) -> bool:
-
         self.start_amount_limit = self.data_provider.get_amount_positions(limit_ticker)
         self.start_amount_market = self.data_provider.get_amount_positions(market_ticker)
 
