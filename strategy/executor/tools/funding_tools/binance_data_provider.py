@@ -1,3 +1,5 @@
+from termcolor import colored
+
 import time
 from typing import Tuple
 
@@ -19,7 +21,7 @@ def _control_rpc(current_rpc, max_rpc, connector) -> bool:
     """
     bad_rpc = False
     while True:
-        if current_rpc > 0.9 * max_rpc:
+        if current_rpc > 0.96 * max_rpc:
             bad_rpc = True
             sleep = 60
             logger.error(msg='You used all RPC. Sleep ',
@@ -39,6 +41,7 @@ def update_rpc(func):
         args[0].current_rpc = args[0].connector.USED_RPC
         current_rpc = args[0].current_rpc
         max_rpc = args[0].max_rpc
+        logger.info(msg=colored('Rate limits:', 'blue'), extra=dict(current_rpc=current_rpc, max_rpc=max_rpc))
         warning_rpc = _control_rpc(current_rpc, max_rpc, args[0].connector)
         args[0].warning_rpc = warning_rpc
         return func(*args, **kwargs)
