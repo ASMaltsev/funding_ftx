@@ -84,7 +84,7 @@ class FundingExecutor(AbstractExecutor):
             if ticker.startswith('BTC'):
                 return 2
             if ticker.startswith('ETH'):
-                return 10
+                return 1
             raise NotImplementedError
 
     def _execute(self, market_ticker: str, limit_ticker: str, limit_side: str, market_side: str,
