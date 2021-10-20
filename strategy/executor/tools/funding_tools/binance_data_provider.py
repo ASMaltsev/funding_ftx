@@ -18,17 +18,19 @@ def _control_rpc(current_rpc, max_rpc) -> bool:
     @return: Is warning rpc?
     """
     bad_rpc = False
-    while True:
+    while True:  # TODO: сделать динамическую проверку rpc
         if current_rpc > 0.9 * max_rpc:
-            bad_rpc = True
-            sleep = 60
+            # bad_rpc = True
+            sleep = 61
             logger.error(msg='You used all RPC. Sleep ',
                          extra=dict(current_rpc=current_rpc, max_rpc=max_rpc, sleep=sleep))
             time.sleep(sleep)
+            return False
+
         if 0.5 * max_rpc < current_rpc < 0.9 * max_rpc:
             logger.warning(msg='You used a lot of RPC', extra=dict(current_rpc=current_rpc, max_rpc=max_rpc))
-            if not bad_rpc:
-                return True
+            # if not bad_rpc:
+            return True
         return False
 
 
