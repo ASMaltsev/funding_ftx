@@ -99,12 +99,6 @@ class FundingExecutor(AbstractExecutor):
         self.start_amount_limit = self.data_provider.get_amount_positions(limit_ticker)
         self.start_amount_market = self.data_provider.get_amount_positions(market_ticker)
 
-        logger.info(msg='Start shopping.',
-                    extra=dict(market_ticker=market_ticker, market_side=market_side, limit_ticker=limit_ticker,
-                               limit_side=limit_side, total_amount=total_amount, reduce_only=reduce_only,
-                               start_amount_limit=self.start_amount_limit,
-                               start_amount_market=self.start_amount_market))
-
         current_amount_qty, prev_executed_qty = 0, 0
         min_size_market_order = self.data_provider.min_size_for_market_order(ticker=market_ticker)
 
@@ -112,6 +106,12 @@ class FundingExecutor(AbstractExecutor):
         limit_qty = round(
             min(self._get_limit_amount(ticker=limit_ticker, section=section), total_amount - current_amount_qty),
             precision)
+
+        logger.info(msg='Start shopping.',
+                    extra=dict(market_ticker=market_ticker, market_side=market_side, limit_ticker=limit_ticker,
+                               limit_side=limit_side, total_amount=total_amount, reduce_only=reduce_only,
+                               start_amount_limit=self.start_amount_limit,
+                               start_amount_market=self.start_amount_market, precision=precision))
 
         self._work_before_new_limit_order(limit_ticker, market_ticker)
         order_status, order_id, price_limit_order, executed_qty = self.data_provider.make_safety_limit_order(
@@ -123,7 +123,8 @@ class FundingExecutor(AbstractExecutor):
         while True:
 
             logger.debug(msg='Order status for limit order.',
-                         extra=dict(order_id=order_id, order_status=order_status, executed_qty=executed_qty))
+                         extra=dict(order_id=order_id, order_status=order_status, executed_qty=executed_qty,
+                                    prev_executed_qty=prev_executed_qty))
 
             logger.info(msg='Current position.', extra=dict(current_amount_qty=current_amount_qty))
 
@@ -152,6 +153,7 @@ class FundingExecutor(AbstractExecutor):
                     side=limit_side,
                     quantity=limit_qty,
                     reduce_only=reduce_only)
+
             elif order_status == 'PARTIALLY_FILLED' or order_status == 'NEW':
 
                 if order_status == 'PARTIALLY_FILLED':
@@ -182,8 +184,7 @@ class FundingExecutor(AbstractExecutor):
                         current_amount_qty += delta
                         limit_qty = round(
                             min(self._get_limit_amount(ticker=limit_ticker, section=section),
-                                total_amount - current_amount_qty),
-                            precision)
+                                total_amount - current_amount_qty), precision)
                         if limit_qty == 0:
                             self.check_positions(limit_ticker=limit_ticker, market_ticker=market_ticker,
                                                  market_ticker_side=market_side, section=section)
