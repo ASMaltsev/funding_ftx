@@ -139,12 +139,12 @@ class BinanceDataProvider(AbstractExecutorDataProvider):
             price = self.get_bbid_bask(ticker)[side_index]
             order_id, _ = self.make_limit_order(ticker=ticker, side=side, price=price, quantity=quantity,
                                                 reduce_only=reduce_only)
-            # logger.debug(msg='Place LIMIT ORDER', extra=dict(ticker=ticker, order_id=order_id))
+            logger.debug(msg='Place LIMIT ORDER', extra=dict(ticker=ticker, order_id=order_id))
 
             time.sleep(0.2)
 
             status, executed_qty = self.get_order_status(ticker=ticker, order_id=order_id)
-            # logger.debug(msg='Info LIMIT ORDER', extra=dict(ticker=ticker, status=status, order_id=order_id))
+            logger.debug(msg='Info LIMIT ORDER', extra=dict(ticker=ticker, status=status, order_id=order_id))
             if status != 'EXPIRED':
                 return status, order_id, price, executed_qty
 
@@ -157,13 +157,13 @@ class BinanceDataProvider(AbstractExecutorDataProvider):
         try:
             return self.make_market_order(ticker=ticker, side=side, quantity=quantity)
         except connectors.exceptions.RequestError as e:
-            # logger.warning(msg='Market order less MIN NOTIONAL', extra=dict(Exception=e))
+            logger.warning(msg='Market order less MIN NOTIONAL', extra=dict(Exception=e))
             if str(e).find('-4164') > 0:
                 precision = abs(str(min_size_order).find('.') - len(str(min_size_order))) + 1
 
                 correct_size = round(self._correct_coef * float(min_size_order), precision)
 
-                # logger.info(msg='Start correction', extra=dict(Correct_size=correct_size, precision=precision))
+                logger.info(msg='Start correction', extra=dict(Correct_size=correct_size, precision=precision))
 
                 self.make_market_order(ticker=ticker, side=self._get_inverse_market_op(side), quantity=correct_size)
                 self.make_market_order(ticker=ticker, side=side, quantity=round(quantity + correct_size, precision))
