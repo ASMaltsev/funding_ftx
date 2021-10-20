@@ -134,7 +134,7 @@ class BinanceDataProvider(AbstractExecutorDataProvider):
         place a limit order at the best price
         @return: order status, orderId, price, executed quantity
         """
-        side_index = 0 if side == 'sell' else 1
+        side_index = 1 if side == 'sell' else 0
         while True:
             price = self.get_bbid_bask(ticker)[side_index]
             order_id, _ = self.make_limit_order(ticker=ticker, side=side, price=price, quantity=quantity,
