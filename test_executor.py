@@ -5,6 +5,7 @@ api_key  = 'QRjSmxIXbjCujcDH4FFn9YobT9B0e52diGa68JbuAGCHUCoOqaq3Ppig4KhhX3i2'
 secret_key = 't4EFPmyOdhqxdMz27QUcikK4srXRrvmPgL4rlXWvFtrMR6bEjCAnXQIrhu8CFY79'
 
 
+
 ticker_swap = 'BTCUSD_PERP'
 ticker_futures = 'BTCUSD_211231'
 
