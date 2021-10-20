@@ -25,6 +25,10 @@ class FundingExecutor(AbstractExecutor):
         # actions_for_execute = parser.parse()
         return True
 
+    def _work_before_new_limit_order(self, limit_ticker, market_ticker):
+        self._control_rpc()
+        self._log_current_positions(limit_ticker, market_ticker)
+
     def check_positions(self, limit_ticker, market_ticker, market_ticker_side, section):
         self.data_provider.cancel_all_orders(limit_ticker)
         self.data_provider.cancel_all_orders(market_ticker)
@@ -90,6 +94,7 @@ class FundingExecutor(AbstractExecutor):
 
     def _execute(self, market_ticker: str, limit_ticker: str, limit_side: str, market_side: str,
                  total_amount: float, reduce_only: bool, section: str) -> bool:
+
         self.start_amount_limit = self.data_provider.get_amount_positions(limit_ticker)
         self.start_amount_market = self.data_provider.get_amount_positions(market_ticker)
 
@@ -106,7 +111,8 @@ class FundingExecutor(AbstractExecutor):
         limit_qty = round(
             min(self._get_limit_amount(ticker=limit_ticker, section=section), total_amount - current_amount_qty),
             precision)
-        self._log_current_positions(limit_ticker, market_ticker)
+
+        self._work_before_new_limit_order(limit_ticker, market_ticker)
         order_status, order_id, price_limit_order, executed_qty = self.data_provider.make_safety_limit_order(
             ticker=limit_ticker,
             side=limit_side,
@@ -138,9 +144,7 @@ class FundingExecutor(AbstractExecutor):
                                          market_ticker_side=market_side, section=section)
                     logger.info(msg='Finished.')
                     break
-
-                self._control_rpc()
-                self._log_current_positions(limit_ticker, market_ticker)
+                self._work_before_new_limit_order(limit_ticker, market_ticker)
 
                 order_status, order_id, price_limit_order, executed_qty = self.data_provider.make_safety_limit_order(
                     ticker=limit_ticker,
@@ -185,8 +189,7 @@ class FundingExecutor(AbstractExecutor):
                             logger.info(msg='Finished.')
                             break
 
-                        self._control_rpc()
-                        self._log_current_positions(limit_ticker, market_ticker)
+                        self._work_before_new_limit_order(limit_ticker, market_ticker)
 
                         order_status, order_id, price_limit_order, executed_qty = \
                             self.data_provider.make_safety_limit_order(ticker=limit_ticker, side=limit_side,
