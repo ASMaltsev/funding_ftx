@@ -1,6 +1,6 @@
 from connectors import ConnectorRouter
 import datetime
-from strategy.alpha.tools.abstract_tools import AbstractAlphaDataProvider
+from strategy.alpha.tools.abstract_tools.abstract_data_provider import AbstractAlphaDataProvider
 
 
 class DataProviderFunding(AbstractAlphaDataProvider):
@@ -9,16 +9,16 @@ class DataProviderFunding(AbstractAlphaDataProvider):
         self.connector_usdtm = ConnectorRouter(exchange='Binance', section='USDT-M').init_connector()
         self.connector_coinm = ConnectorRouter(exchange='Binance', section='COIN-M').init_connector()
 
-        self.PATH_API_PRICE_COINM = 'https://dapi.binance.com/dapi/v1/ticker/price?symbol='
-        self.PATH_API_PRICE_USDTM = 'https://fapi.binance.com/fapi/v1/ticker/price?symbol='
 
+    def get_price(self, ticker):
+        section = 'USDT-M' if ticker.split('_')[0][-1] == 'T' else 'COIN-M'
+        connector = self.connector_usdtm if section == 'USDT-M' else self.connector_coinm
+        bbid_bask = connector.get_bbid_bask(ticker)
+        bbid = float(bbid_bask)['bidPrice']
+        bask = float(bbid_bask)['askPrice']
+        mid_price = (bbid + bask)/2
+        return mid_price
 
-
-    def get_price(self, ticker, section):
-        if section == 'USDT-M':
-            return float(requests.get(self.PATH_API_PRICE_USDTM+ticker).json()['price'])
-        elif section == 'COIN-M':
-            return float(requests.get(self.PATH_API_PRICE_COINM+ticker).json()[0]['price'])
 
 
     def get_tte(self, ticker_quart) -> int:
