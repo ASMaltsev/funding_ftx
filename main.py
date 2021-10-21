@@ -1,5 +1,5 @@
 from strategy.executor import FundingExecutor
-from strategy import FundingAlpha
+from strategy.alpha import FundingAlpha
 import time
 
 
