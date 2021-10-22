@@ -1,4 +1,4 @@
-from strategy import FundingExecutor
+from strategy.executor.tools.funding_tools.executor import FundingExecutor
 
 # # TEST API
 api_key = 'IdPorsZNdskqCUNbO5aN0w6TY67Kfl0syZjHDV3ZP9tOMuM6k3KzovNizMKmBpix'
