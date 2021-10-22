@@ -10,7 +10,7 @@ ticker_futures = 'ETHUSDT_211231'
 swap_side = 'buy'
 futures_side = 'sell'
 reduce_only = False
-total_amount = 2
+total_amount = 100
 section = 'COIN-M'
 
 FundingExecutor(api_key=api_key, secret_key=secret_key, section=section)._execute(
