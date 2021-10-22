@@ -9,7 +9,7 @@ ticker_futures = 'ETHUSD_211231'
 
 swap_side = 'sell'
 futures_side = 'buy'
-reduce_only = True
+reduce_only = False
 total_amount = 100
 section = 'COIN-M'
 

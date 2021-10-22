@@ -144,7 +144,7 @@ class BinanceDataProvider(AbstractExecutorDataProvider):
                                                 reduce_only=reduce_only)
             logger.debug(msg='Place LIMIT ORDER', extra=dict(ticker=ticker, order_id=order_id))
 
-            time.sleep(0.2)
+            time.sleep(0.5)
 
             status, executed_qty = self.get_order_status(ticker=ticker, order_id=order_id)
             logger.debug(msg='Info LIMIT ORDER', extra=dict(ticker=ticker, status=status, order_id=order_id))
