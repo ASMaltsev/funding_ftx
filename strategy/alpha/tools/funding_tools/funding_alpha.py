@@ -6,17 +6,22 @@ import time
 import itertools
 
 
+# A = 6
+# k = 4.95
 
 
 class FundingAlpha(AbstractAlpha):
 
-    def __init__(self, list_usdtm, list_coinm, A):
+    def __init__(self, list_usdtm, list_coinm, A, k, share_usdt, share_coin, base_fr_earn):
 
         self.base_fr_earn = base_fr_earn
         self.A = A
+        self.k = k
+        self.base_fr_earn = base_fr_earn
 
-        self.share_usdt =
-        self.share_coin =
+        self.share_usdt = share_usdt
+        self.share_coinm = share_coinm
+
 
 
         self.list_coinm = list_coinm # ['ETHUSDT', 'BTCUSDT', 'ETHUSDT_211231', 'BTCUSDT_211231']
@@ -28,24 +33,20 @@ class FundingAlpha(AbstractAlpha):
 
 
     def decide(self) -> dict:
-        bbid, bask = self.provider_usdt_m.get_bbid_bask('ETHUSDT')
-        self.logger.info(msg='Get data', extra=dict(bbid=bbid, bask=bask))
-
-        k = get_k()
 
         state = {
                  'USDT': {'actions': {}},
                  'COIN-M': {'actions': {}}
                  }
+
         pairs_usdtm, pairs_coinm = list_parser()
+        self.share_coinm['next'] = [max(self.get_current_next(pairs_coinm)), share_coin['next']]
+        self.share_coinm['current'] = [min(self.get_current_next(pairs_coinm)), share_coin['current']]
+
+
 
         for pair_usdtm in pairs_usdtm:
             pair_usdtm
-
-
-
-
-
 
 
         return {}
@@ -55,8 +56,6 @@ class FundingAlpha(AbstractAlpha):
         spread_pct, spread_apr = dataprovider.get_spread(ticker_swap, ticker_quart)
         return (k/spread_apr)
 
-    def get_k(self):
-        return self.base_fr_earn - self.A
 
     def list_parser(self):
         pairs_usdtm = []
@@ -77,3 +76,9 @@ class FundingAlpha(AbstractAlpha):
                         pairs_coinm.append(pair)
 
         return pairs_usdtm, pairs_coinm
+
+
+    def get_current_next(self, pairs_coinm):
+
+        quarts = list(set([int(q[1].split('_')[1]) for q in pairs_coinm]))
+        return quarts

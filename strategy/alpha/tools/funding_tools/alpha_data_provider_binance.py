@@ -14,11 +14,10 @@ class DataProviderFunding(AbstractAlphaDataProvider):
         section = 'USDT-M' if ticker.split('_')[0][-1] == 'T' else 'COIN-M'
         connector = self.connector_usdtm if section == 'USDT-M' else self.connector_coinm
         bbid_bask = connector.get_bbid_bask(ticker)
-        bbid = float(bbid_bask)['bidPrice']
-        bask = float(bbid_bask)['askPrice']
+        bbid = float(bbid_bask['bidPrice'])
+        bask = float(bbid_bask['askPrice'])
         mid_price = (bbid + bask)/2
         return mid_price
-
 
 
     def get_tte(self, ticker_quart) -> int:
@@ -32,9 +31,9 @@ class DataProviderFunding(AbstractAlphaDataProvider):
         return tte
 
 
-    def get_spread(self, ticker_swap, ticker_quart, section):
-        price_swap = self.get_price(ticker_swap, section)
-        price_quart = self.get_price(ticker_quart, section)
+    def get_spread(self, ticker_swap, ticker_quart):
+        price_swap = self.get_price(ticker_swap)
+        price_quart = self.get_price(ticker_quart)
 
         spread_pct = (price_quart - price_swap)/price_swap
         tte = self.get_tte(ticker_quart)
