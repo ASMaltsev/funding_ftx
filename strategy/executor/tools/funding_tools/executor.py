@@ -166,7 +166,8 @@ class FundingExecutor(AbstractExecutor):
 
                 side_index = 0 if limit_side == 'sell' else 1
                 current_price = self.data_provider.get_bbid_bask(ticker=limit_ticker)[side_index]
-
+                logger.debug(msg='Prices:',
+                             extra=dict(price_limit_order=price_limit_order, current_price=current_price))
                 if price_limit_order != current_price:
                     is_cancel = self.data_provider.cancel_order(ticker=limit_ticker,
                                                                 order_id=order_id)
