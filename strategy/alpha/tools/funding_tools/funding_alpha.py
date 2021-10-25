@@ -12,17 +12,14 @@ import itertools
 
 class FundingAlpha(AbstractAlpha):
 
-    def __init__(self, list_usdtm, list_coinm, A, k, share_usdt, share_coin, base_fr_earn):
+    def __init__(self, list_usdtm, list_coinm, A, k, share_usdtm, share_coinm, base_fr_earn):
 
         self.base_fr_earn = base_fr_earn
         self.A = A
         self.k = k
-        self.base_fr_earn = base_fr_earn
 
-        self.share_usdt = share_usdt
+        self.share_usdtm = share_usdtm
         self.share_coinm = share_coinm
-
-
 
         self.list_coinm = list_coinm # ['ETHUSDT', 'BTCUSDT', 'ETHUSDT_211231', 'BTCUSDT_211231']
         self.list_usdtm = list_usdtm # ['ETHUSD_PERP', 'BTCUSD_PERP', 'BTCUSD_211231', 'ETHUSD_211231', 'BTCUSD_220325', 'ETHUSD_220325']
@@ -35,26 +32,36 @@ class FundingAlpha(AbstractAlpha):
     def decide(self) -> dict:
 
         state = {
-                 'USDT': {'actions': {}},
+                 'USDT-M': {'actions': {}},
                  'COIN-M': {'actions': {}}
                  }
 
-        pairs_usdtm, pairs_coinm = list_parser()
-        self.share_coinm['next'] = [max(self.get_current_next(pairs_coinm)), share_coin['next']]
-        self.share_coinm['current'] = [min(self.get_current_next(pairs_coinm)), share_coin['current']]
-
-
+        pairs_usdtm, pairs_coinm = self.list_parser()
+        self.share_coinm['next'] = [max(self.get_current_next(pairs_coinm)), self.share_coinm['next']]
+        self.share_coinm['current'] = [min(self.get_current_next(pairs_coinm)), self.share_coinm['current']]
 
         for pair_usdtm in pairs_usdtm:
-            pair_usdtm
+            print(pair_usdtm)
+            asset = 'BTC' if pair_usdtm[0].startswith('BTC') else 'ETH'
+            size, spread_pct, spread_apr = self.get_clam_size(self.k, pair_usdtm[0], pair_usdtm[1])
+            print(spread_pct, spread_apr)
+            print(size)
+
+            if self.base_fr_earn - spread_apr > self.A:
+                size = 1/self.share_usdtm[asset]
+
+            state['USDT-M']['actions'][asset] = ['setup', size*self.share_usdtm[asset], pair_usdtm]
+
+        print(state)
+
 
 
         return {}
 
 
     def get_clam_size(self, k, ticker_swap, ticker_quart): # k = 4.95
-        spread_pct, spread_apr = dataprovider.get_spread(ticker_swap, ticker_quart)
-        return (k/spread_apr)
+        spread_pct, spread_apr = self.dataprovider.get_spread(ticker_swap, ticker_quart)
+        return (k/spread_apr), spread_pct, spread_apr
 
 
     def list_parser(self):
