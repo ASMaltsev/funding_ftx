@@ -1,9 +1,9 @@
 from strategy.executor import FundingExecutor
-from strategy.alpha import FundingAlpha
+# from strategy.alpha import FundingAlpha
 import time
 
 
-def _get_decide(funding_strategy: FundingAlpha):
+def _get_decide(funding_strategy):
     try:
         decide = funding_strategy.decide()
         return decide
@@ -24,11 +24,12 @@ if __name__ == '__main__':
     secret_key_client = ''
 
     executor = FundingExecutor(api_key=api_key_client, secret_key=secret_key_client, section='USDT-M')
-    strategy = FundingAlpha()
+    # strategy = FundingAlpha()
     while True:
         decide = None
         try:
-            decide = _get_decide(strategy)
+            pass
+            # decide = _get_decide(strategy)
         except Exception as e:
             pass
 

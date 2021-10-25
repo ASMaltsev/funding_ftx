@@ -1,3 +1,3 @@
-from strategy.executor.tools.funding_tools.executor import FundingExecutor
+from strategy.executor.tools.funding_tools import FundingExecutor
 
 __all__ = ['FundingExecutor']

@@ -18,7 +18,6 @@ def send_log():
         bot.send_document(chat_id, f)
 
 
-# Our signal handler
 def signal_handler(signum, frame):
     send_log()
     exit(0)
