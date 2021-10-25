@@ -18,14 +18,15 @@ class CustomAdapter(logging.LoggerAdapter):
 class Logger:
     def __init__(self, name):
         self.name = name
+        self.file_path = None
 
     def create(self):
         logger = logging.getLogger(self.name)
         logger.setLevel(logging.DEBUG)
 
         handler_stream = logging.StreamHandler()
-        handler_file = logging.FileHandler(
-            f'{client_name}_{datetime.utcnow().replace(microsecond=0, second=0)}.log')
+        self.file_path = f'{client_name}_{datetime.utcnow().replace(microsecond=0, second=0)}.log'
+        handler_file = logging.FileHandler(self.file_path)
         handler_file.setLevel(logging.DEBUG)
 
         strfmt = '%(asctime)s.%(msecs)06d  %(levelname)s [%(name)s]  %(message)s'
@@ -40,3 +41,6 @@ class Logger:
         logger.addHandler(handler_stream)
         adapter = CustomAdapter(logger, None)
         return adapter
+
+    def on_google_cloud(self):
+        pass

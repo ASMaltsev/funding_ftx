@@ -95,108 +95,114 @@ class FundingExecutor(AbstractExecutor):
 
     def _execute(self, market_ticker: str, limit_ticker: str, limit_side: str, market_side: str,
                  total_amount: float, reduce_only: bool, section: str) -> bool:
+        try:
+            self.start_amount_limit = self.data_provider.get_amount_positions(limit_ticker)
+            self.start_amount_market = self.data_provider.get_amount_positions(market_ticker)
 
-        self.start_amount_limit = self.data_provider.get_amount_positions(limit_ticker)
-        self.start_amount_market = self.data_provider.get_amount_positions(market_ticker)
+            current_amount_qty, prev_executed_qty = 0, 0
+            min_size_market_order = self.data_provider.min_size_for_market_order(ticker=market_ticker)
 
-        current_amount_qty, prev_executed_qty = 0, 0
-        min_size_market_order = self.data_provider.min_size_for_market_order(ticker=market_ticker)
+            precision = abs(str(min_size_market_order).find('.') - len(str(min_size_market_order))) + 1
+            limit_qty = round(
+                min(self._get_limit_amount(ticker=limit_ticker, section=section), total_amount - current_amount_qty),
+                precision)
 
-        precision = abs(str(min_size_market_order).find('.') - len(str(min_size_market_order))) + 1
-        limit_qty = round(
-            min(self._get_limit_amount(ticker=limit_ticker, section=section), total_amount - current_amount_qty),
-            precision)
+            logger.info(msg='Start shopping.',
+                        extra=dict(market_ticker=market_ticker, market_side=market_side, limit_ticker=limit_ticker,
+                                   limit_side=limit_side, total_amount=total_amount, reduce_only=reduce_only,
+                                   start_amount_limit=self.start_amount_limit,
+                                   start_amount_market=self.start_amount_market, precision=precision))
 
-        logger.info(msg='Start shopping.',
-                    extra=dict(market_ticker=market_ticker, market_side=market_side, limit_ticker=limit_ticker,
-                               limit_side=limit_side, total_amount=total_amount, reduce_only=reduce_only,
-                               start_amount_limit=self.start_amount_limit,
-                               start_amount_market=self.start_amount_market, precision=precision))
+            self._work_before_new_limit_order(limit_ticker, market_ticker)
+            order_status, order_id, price_limit_order, executed_qty = self.data_provider.make_safety_limit_order(
+                ticker=limit_ticker,
+                side=limit_side,
+                quantity=limit_qty,
+                reduce_only=reduce_only)
 
-        self._work_before_new_limit_order(limit_ticker, market_ticker)
-        order_status, order_id, price_limit_order, executed_qty = self.data_provider.make_safety_limit_order(
-            ticker=limit_ticker,
-            side=limit_side,
-            quantity=limit_qty,
-            reduce_only=reduce_only)
+            while True:
 
-        while True:
+                logger.debug(msg='Order status for limit order.',
+                             extra=dict(order_id=order_id, order_status=order_status, executed_qty=executed_qty,
+                                        prev_executed_qty=prev_executed_qty))
 
-            logger.debug(msg='Order status for limit order.',
-                         extra=dict(order_id=order_id, order_status=order_status, executed_qty=executed_qty,
-                                    prev_executed_qty=prev_executed_qty))
+                logger.info(msg='Current position.', extra=dict(current_amount_qty=current_amount_qty))
 
-            logger.info(msg='Current position.', extra=dict(current_amount_qty=current_amount_qty))
+                delta = round(executed_qty - prev_executed_qty, precision)
+                prev_executed_qty = executed_qty
 
-            delta = round(executed_qty - prev_executed_qty, precision)
-            prev_executed_qty = executed_qty
-
-            if order_status == 'FILLED':
-                logger.debug(msg='Make market order.', extra=dict(ticker=market_ticker, quantity=delta))
-                self.data_provider.make_safety_market_order(ticker=market_ticker, side=market_side,
-                                                            quantity=delta,
-                                                            min_size_order=min_size_market_order)
-                current_amount_qty += delta
-                limit_qty = round(min(self._get_limit_amount(ticker=limit_ticker, section=section),
-                                      total_amount - current_amount_qty),
-                                  precision)
-
-                if limit_qty == 0:
-                    self.check_positions(limit_ticker=limit_ticker, market_ticker=market_ticker,
-                                         market_ticker_side=market_side, section=section)
-                    logger.info(msg='Finished.')
-                    break
-                self._work_before_new_limit_order(limit_ticker, market_ticker)
-                prev_executed_qty = 0
-
-                order_status, order_id, price_limit_order, executed_qty = self.data_provider.make_safety_limit_order(
-                    ticker=limit_ticker,
-                    side=limit_side,
-                    quantity=limit_qty,
-                    reduce_only=reduce_only)
-
-            elif order_status == 'PARTIALLY_FILLED' or order_status == 'NEW':
-
-                if order_status == 'PARTIALLY_FILLED':
-                    logger.debug(msg='Make market order', extra=dict(ticker=market_ticker, quantity=delta))
+                if order_status == 'FILLED':
+                    logger.debug(msg='Make market order.', extra=dict(ticker=market_ticker, quantity=delta))
                     self.data_provider.make_safety_market_order(ticker=market_ticker, side=market_side,
                                                                 quantity=delta,
                                                                 min_size_order=min_size_market_order)
                     current_amount_qty += delta
+                    limit_qty = round(min(self._get_limit_amount(ticker=limit_ticker, section=section),
+                                          total_amount - current_amount_qty),
+                                      precision)
 
-                side_index = 1 if limit_side == 'sell' else 0
-                current_price = self.data_provider.get_bbid_bask(ticker=limit_ticker)[side_index]
-                logger.debug(msg='Prices:',
-                             extra=dict(price_limit_order=price_limit_order, current_price=current_price))
-                if price_limit_order != current_price:
-                    is_cancel = self.data_provider.cancel_order(ticker=limit_ticker,
-                                                                order_id=order_id)
-                    order_status, executed_qty = self.data_provider.get_order_status(ticker=limit_ticker,
-                                                                                     order_id=order_id)
-                    delta = round(executed_qty - prev_executed_qty, precision)
-                    logger.debug(msg='Params canceled orders',
-                                 extra=dict(order_status=order_status, executed_qty=executed_qty, delta=delta,
-                                            is_cancel=is_cancel, order_id=order_id))
-                    if is_cancel:
+                    if limit_qty == 0:
+                        self.check_positions(limit_ticker=limit_ticker, market_ticker=market_ticker,
+                                             market_ticker_side=market_side, section=section)
+                        logger.info(msg='Finished.')
+                        break
+                    self._work_before_new_limit_order(limit_ticker, market_ticker)
+                    prev_executed_qty = 0
+
+                    order_status, order_id, price_limit_order, executed_qty = self.data_provider.make_safety_limit_order(
+                        ticker=limit_ticker,
+                        side=limit_side,
+                        quantity=limit_qty,
+                        reduce_only=reduce_only)
+
+                elif order_status == 'PARTIALLY_FILLED' or order_status == 'NEW':
+
+                    if order_status == 'PARTIALLY_FILLED':
                         logger.debug(msg='Make market order', extra=dict(ticker=market_ticker, quantity=delta))
-                        self.data_provider.make_safety_market_order(ticker=market_ticker,
-                                                                    side=market_side,
+                        self.data_provider.make_safety_market_order(ticker=market_ticker, side=market_side,
                                                                     quantity=delta,
                                                                     min_size_order=min_size_market_order)
                         current_amount_qty += delta
-                        limit_qty = round(
-                            min(self._get_limit_amount(ticker=limit_ticker, section=section),
-                                total_amount - current_amount_qty), precision)
-                        if limit_qty == 0:
-                            self.check_positions(limit_ticker=limit_ticker, market_ticker=market_ticker,
-                                                 market_ticker_side=market_side, section=section)
-                            logger.info(msg='Finished.')
-                            break
 
-                        self._work_before_new_limit_order(limit_ticker, market_ticker)
-                        prev_executed_qty = 0
+                    side_index = 1 if limit_side == 'sell' else 0
+                    current_price = self.data_provider.get_bbid_bask(ticker=limit_ticker)[side_index]
+                    logger.debug(msg='Prices:',
+                                 extra=dict(price_limit_order=price_limit_order, current_price=current_price))
+                    if price_limit_order != current_price:
+                        is_cancel = self.data_provider.cancel_order(ticker=limit_ticker,
+                                                                    order_id=order_id)
+                        order_status, executed_qty = self.data_provider.get_order_status(ticker=limit_ticker,
+                                                                                         order_id=order_id)
+                        delta = round(executed_qty - prev_executed_qty, precision)
+                        logger.debug(msg='Params canceled orders',
+                                     extra=dict(order_status=order_status, executed_qty=executed_qty, delta=delta,
+                                                is_cancel=is_cancel, order_id=order_id))
+                        if is_cancel:
+                            logger.debug(msg='Make market order', extra=dict(ticker=market_ticker, quantity=delta))
+                            self.data_provider.make_safety_market_order(ticker=market_ticker,
+                                                                        side=market_side,
+                                                                        quantity=delta,
+                                                                        min_size_order=min_size_market_order)
+                            current_amount_qty += delta
+                            limit_qty = round(
+                                min(self._get_limit_amount(ticker=limit_ticker, section=section),
+                                    total_amount - current_amount_qty), precision)
+                            if limit_qty == 0:
+                                self.check_positions(limit_ticker=limit_ticker, market_ticker=market_ticker,
+                                                     market_ticker_side=market_side, section=section)
+                                logger.info(msg='Finished.')
+                                break
 
-                        order_status, order_id, price_limit_order, executed_qty = \
-                            self.data_provider.make_safety_limit_order(ticker=limit_ticker, side=limit_side,
-                                                                       quantity=limit_qty, reduce_only=reduce_only)
-        return True
+                            self._work_before_new_limit_order(limit_ticker, market_ticker)
+                            prev_executed_qty = 0
+
+                            order_status, order_id, price_limit_order, executed_qty = \
+                                self.data_provider.make_safety_limit_order(ticker=limit_ticker, side=limit_side,
+                                                                           quantity=limit_qty, reduce_only=reduce_only)
+            return True
+
+        except Exception as e:
+            logger.error(msg=str(e))
+            return False
+        finally:
+            logger.on_google_cloud()

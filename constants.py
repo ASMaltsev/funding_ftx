@@ -1,4 +1,3 @@
-# # TEST API
 api_key = ''
 secret_key = ''
 
