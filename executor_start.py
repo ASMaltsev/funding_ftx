@@ -1,4 +1,4 @@
-from strategy.executor.tools.funding_tools import FundingExecutor
+from strategy.executor import FundingExecutor
 from constants import *
 
 FundingExecutor(api_key=api_key, secret_key=secret_key, section=section)._execute(
