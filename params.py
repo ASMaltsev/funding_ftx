@@ -12,8 +12,8 @@ client_name = 'test'
 ticker_swap = 'ETHUSD_PERP'
 ticker_futures = 'ETHUSD_220325'
 
-swap_side = 'buy'
-futures_side = 'sell'
+swap_side = 'sell'
+futures_side = 'buy'
 reduce_only = False
-total_amount = 20
+total_amount = 40
 section = 'COIN-M'
