@@ -158,6 +158,8 @@ class BinanceDataProvider(AbstractExecutorDataProvider):
         @return: True if success False otherwise
         """
         try:
+            if quantity == 0:
+                return True
             return self.make_market_order(ticker=ticker, side=side, quantity=quantity)
         except connectors.exceptions.RequestError as e:
             logger.warning(msg='Market order less MIN NOTIONAL', extra=dict(Exception=e))
