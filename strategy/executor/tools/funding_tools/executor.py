@@ -27,6 +27,8 @@ class FundingExecutor(AbstractExecutor):
         return True
 
     def _work_before_new_limit_order(self, limit_ticker, market_ticker):
+        logger.debug(msg=colored('Rate limits:', 'blue'),
+                     extra=dict(current_rpc=self.data_provider.current_rpc, max_rpc=self.data_provider.max_rpc))
         self._control_rpc()
         self._log_current_positions(limit_ticker, market_ticker)
 
@@ -126,17 +128,11 @@ class FundingExecutor(AbstractExecutor):
 
             while True:
 
-                logger.debug(msg='Order status for limit order.',
-                             extra=dict(order_id=order_id, order_status=order_status, executed_qty=executed_qty,
-                                        prev_executed_qty=prev_executed_qty))
-
-                logger.debug(msg='Current position.', extra=dict(current_amount_qty=current_amount_qty))
-
                 delta = round(executed_qty - prev_executed_qty, precision)
                 prev_executed_qty = executed_qty
 
                 if order_status == 'FILLED':
-                    logger.debug(msg='Make market order.', extra=dict(ticker=market_ticker, quantity=delta))
+                    logger.info(msg='Make market order.', extra=dict(ticker=market_ticker, quantity=delta))
                     self.data_provider.make_safety_market_order(ticker=market_ticker, side=market_side,
                                                                 quantity=delta,
                                                                 min_size_order=min_size_market_order)
@@ -159,11 +155,12 @@ class FundingExecutor(AbstractExecutor):
                         side=limit_side,
                         quantity=limit_qty,
                         reduce_only=reduce_only)
+                    logger.info(msg='Current position.', extra=dict(current_amount_qty=current_amount_qty))
 
                 elif order_status == 'PARTIALLY_FILLED' or order_status == 'NEW':
 
                     if order_status == 'PARTIALLY_FILLED':
-                        logger.debug(msg='Make market order', extra=dict(ticker=market_ticker, quantity=delta))
+                        logger.info(msg='Make market order', extra=dict(ticker=market_ticker, quantity=delta))
                         self.data_provider.make_safety_market_order(ticker=market_ticker, side=market_side,
                                                                     quantity=delta,
                                                                     min_size_order=min_size_market_order)
@@ -171,19 +168,18 @@ class FundingExecutor(AbstractExecutor):
 
                     side_index = 1 if limit_side == 'sell' else 0
                     current_price = self.data_provider.get_bbid_bask(ticker=limit_ticker)[side_index]
-                    logger.debug(msg='Prices:',
-                                 extra=dict(price_limit_order=price_limit_order, current_price=current_price))
+
                     if price_limit_order != current_price:
                         is_cancel = self.data_provider.cancel_order(ticker=limit_ticker,
                                                                     order_id=order_id)
                         order_status, executed_qty = self.data_provider.get_order_status(ticker=limit_ticker,
                                                                                          order_id=order_id)
                         delta = round(executed_qty - prev_executed_qty, precision)
-                        logger.debug(msg='Params canceled orders',
-                                     extra=dict(order_status=order_status, executed_qty=executed_qty, delta=delta,
-                                                is_cancel=is_cancel, order_id=order_id))
+                        logger.info(msg='Params canceled orders',
+                                    extra=dict(order_status=order_status, executed_qty=executed_qty, delta=delta,
+                                               is_cancel=is_cancel, order_id=order_id))
                         if is_cancel:
-                            logger.debug(msg='Make market order', extra=dict(ticker=market_ticker, quantity=delta))
+                            logger.info(msg='Make market order', extra=dict(ticker=market_ticker, quantity=delta))
                             self.data_provider.make_safety_market_order(ticker=market_ticker,
                                                                         side=market_side,
                                                                         quantity=delta,
@@ -200,7 +196,7 @@ class FundingExecutor(AbstractExecutor):
 
                             prev_executed_qty = 0
 
-                            self._control_rpc()
+                            self._work_before_new_limit_order(limit_ticker, market_ticker)
                             order_status, order_id, price_limit_order, executed_qty = \
                                 self.data_provider.make_safety_limit_order(ticker=limit_ticker, side=limit_side,
                                                                            quantity=limit_qty, reduce_only=reduce_only)
