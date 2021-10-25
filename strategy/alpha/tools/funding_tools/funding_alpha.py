@@ -12,11 +12,12 @@ import itertools
 
 class FundingAlpha(AbstractAlpha):
 
-    def __init__(self, list_usdtm, list_coinm, A, k, share_usdtm, share_coinm, base_fr_earn):
+    def __init__(self, list_usdtm, list_coinm, A, k, time_exit, share_usdtm, share_coinm, base_fr_earn):
 
         self.base_fr_earn = base_fr_earn
         self.A = A
         self.k = k
+        self.time_exit = time_exit
 
         self.share_usdtm = share_usdtm
         self.share_coinm = share_coinm
@@ -40,23 +41,49 @@ class FundingAlpha(AbstractAlpha):
         self.share_coinm['next'] = [max(self.get_current_next(pairs_coinm)), self.share_coinm['next']]
         self.share_coinm['current'] = [min(self.get_current_next(pairs_coinm)), self.share_coinm['current']]
 
+
+        state = self.setup(state, pairs_usdtm, pairs_coinm)
+        state = self.exit_position(state, self.time_exit)
+
+
+        return state
+
+    # Setup
+    def setup(self, state, pairs_usdtm, pairs_coinm):
         for pair_usdtm in pairs_usdtm:
-            print(pair_usdtm)
             asset = 'BTC' if pair_usdtm[0].startswith('BTC') else 'ETH'
             size, spread_pct, spread_apr = self.get_clam_size(self.k, pair_usdtm[0], pair_usdtm[1])
-            print(spread_pct, spread_apr)
-            print(size)
 
             if self.base_fr_earn - spread_apr > self.A:
-                size = 1/self.share_usdtm[asset]
+                size = 1
 
             state['USDT-M']['actions'][asset] = ['setup', size*self.share_usdtm[asset], pair_usdtm]
 
-        print(state)
+        for pair_coinm in pairs_coinm:
+            asset = 'BTC' if pair_coinm[0].startswith('BTC') else 'ETH'
+            quart = 'current' if int(pair_coinm[1].split('_')[1]) == self.share_coinm['current'][0] else 'next'
+            size, spread_pct, spread_apr = self.get_clam_size(self.k, pair_coinm[0], pair_coinm[1])
+
+            if self.base_fr_earn - spread_apr > self.A:
+                size = 1
+
+            state['COIN-M']['actions'][f'{asset}_{quart}'] = ['setup', size*self.share_coinm[quart][1], pair_coinm]
+
+        return state
 
 
+    def exit_position(self, state, time_exit):
+        sections = ['USDT-M', 'COIN-M']
+        for s in sections:
+            assets = list(state[s]['actions'].keys())
+            for asset in assets:
+                pair = state[s]['actions'][asset][-1]
+                q = state[s]['actions'][asset][-1][-1]
+                tte = self.dataprovider.get_tte(q)
+                if tte <= time_exit:
+                    state[s]['actions'][asset] = ['exit', 0, pair]
 
-        return {}
+        return state
 
 
     def get_clam_size(self, k, ticker_swap, ticker_quart): # k = 4.95
@@ -86,6 +113,5 @@ class FundingAlpha(AbstractAlpha):
 
 
     def get_current_next(self, pairs_coinm):
-
         quarts = list(set([int(q[1].split('_')[1]) for q in pairs_coinm]))
         return quarts
