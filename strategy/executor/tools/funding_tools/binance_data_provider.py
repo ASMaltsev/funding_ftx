@@ -19,7 +19,7 @@ def _control_rpc(current_rpc, max_rpc, connector) -> bool:
     @param max_rpc: maximum rpc
     @return: Is warning rpc?
     """
-    warning_min = 0.5
+    warning_min = 0.7
     warning_max = 0.95
     bad_rpc = False
     while True:
