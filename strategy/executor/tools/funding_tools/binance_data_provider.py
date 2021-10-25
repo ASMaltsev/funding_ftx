@@ -139,11 +139,11 @@ class BinanceDataProvider(AbstractExecutorDataProvider):
         """
         side_index = 1 if side == 'sell' else 0
         while True:
+            time.sleep(0.5)
+
             price = self.get_bbid_bask(ticker)[side_index]
             order_id, _ = self.make_limit_order(ticker=ticker, side=side, price=price, quantity=quantity,
                                                 reduce_only=reduce_only)
-
-            time.sleep(0.5)
             status, executed_qty = self.get_order_status(ticker=ticker, order_id=order_id)
             if status != 'EXPIRED':
                 logger.info(msg='Info limit order:',
