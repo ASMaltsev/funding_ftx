@@ -5,7 +5,7 @@ import sys
 from strategy.executor.tools.abstract_tools.abstract_executor import AbstractExecutor
 from strategy.executor.tools.funding_tools.parser_actions import ParserActions
 from strategy.executor.tools.funding_tools.binance_data_provider import BinanceDataProvider
-from strategy.others import Logger
+from strategy.others import Logger, send_log
 
 my_logger = Logger('Executor')
 logger = my_logger.create()
@@ -206,4 +206,4 @@ class FundingExecutor(AbstractExecutor):
             logger.error(msg=str(e))
             return False
         finally:
-            my_logger.send_log()
+            send_log()
