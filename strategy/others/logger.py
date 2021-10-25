@@ -1,4 +1,6 @@
 import logging
+from datetime import datetime
+from constants import client_name
 
 
 class CustomAdapter(logging.LoggerAdapter):
@@ -22,8 +24,8 @@ class Logger:
         logger.setLevel(logging.DEBUG)
 
         handler_stream = logging.StreamHandler()
-
-        handler_file = logging.FileHandler(f'main.log')
+        handler_file = logging.FileHandler(
+            f'{client_name}_{datetime.utcnow().replace(microsecond=0, second=0)}.log')
         handler_file.setLevel(logging.DEBUG)
 
         strfmt = '%(asctime)s.%(msecs)06d  %(levelname)s [%(name)s]  %(message)s'
