@@ -5,12 +5,12 @@ import logging
 from datetime import datetime
 from constants import client_name
 
-file_path = ''
+file_path = f'{client_name}_{datetime.utcnow().replace(microsecond=0, second=0)}.log'
+flag = False
 
 
 def send_log():
-    print(file_path)
-    if file_path != '':
+    if not flag:
         bot = telebot.TeleBot(
             token='2082278568:AAF1NVUcgmS1x5X4hFvkzxc6YsoePbmy0Vk')
         chat_id = '368392600'
@@ -19,7 +19,9 @@ def send_log():
 
 
 def signal_handler(signum, frame):
+    global flag
     send_log()
+    flag = True
     exit(0)
 
 
@@ -47,7 +49,6 @@ class Logger:
         logger.setLevel(logging.DEBUG)
 
         handler_stream = logging.StreamHandler()
-        file_path = f'{client_name}_{datetime.utcnow().replace(microsecond=0, second=0)}.log'
         handler_file = logging.FileHandler(file_path)
         handler_file.setLevel(logging.DEBUG)
 
