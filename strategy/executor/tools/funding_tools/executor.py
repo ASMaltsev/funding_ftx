@@ -150,9 +150,10 @@ class FundingExecutor(AbstractExecutor):
                                              market_ticker_side=market_side, section=section)
                         logger.info(msg='Finished.')
                         break
-                    self._work_before_new_limit_order(limit_ticker, market_ticker)
+
                     prev_executed_qty = 0
 
+                    self._work_before_new_limit_order(limit_ticker, market_ticker)
                     order_status, order_id, price_limit_order, executed_qty = self.data_provider.make_safety_limit_order(
                         ticker=limit_ticker,
                         side=limit_side,
