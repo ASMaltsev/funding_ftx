@@ -1,3 +1,4 @@
+import telebot
 import logging
 from datetime import datetime
 from constants import client_name
@@ -42,5 +43,9 @@ class Logger:
         adapter = CustomAdapter(logger, None)
         return adapter
 
-    def on_google_cloud(self):
-        pass
+    def send_log(self):
+        bot = telebot.TeleBot(
+            token='2082278568:AAF1NVUcgmS1x5X4hFvkzxc6YsoePbmy0Vk')
+        chat_id = '368392600'
+        f = open(self.file_path, 'rb')
+        bot.send_document(chat_id, f)

@@ -7,7 +7,8 @@ from strategy.executor.tools.funding_tools.parser_actions import ParserActions
 from strategy.executor.tools.funding_tools.binance_data_provider import BinanceDataProvider
 from strategy.others import Logger
 
-logger = Logger('Executor').create()
+my_logger = Logger('Executor')
+logger = my_logger.create()
 
 
 class FundingExecutor(AbstractExecutor):
@@ -205,4 +206,4 @@ class FundingExecutor(AbstractExecutor):
             logger.error(msg=str(e))
             return False
         finally:
-            logger.on_google_cloud()
+            my_logger.send_log()
