@@ -1,5 +1,5 @@
 from strategy.executor import FundingExecutor
-from constants import *
+from params import *
 
 FundingExecutor(api_key=api_key, secret_key=secret_key, section=section)._execute(
     market_ticker=ticker_futures,

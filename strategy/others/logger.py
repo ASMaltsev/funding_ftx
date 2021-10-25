@@ -3,7 +3,7 @@ import telebot
 import signal
 import logging
 from datetime import datetime
-from constants import client_name
+from params import client_name
 
 file_path = f'{client_name}_{datetime.utcnow().replace(microsecond=0, second=0)}.log'
 flag = False
