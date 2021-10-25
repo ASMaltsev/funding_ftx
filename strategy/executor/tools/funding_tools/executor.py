@@ -164,7 +164,7 @@ class FundingExecutor(AbstractExecutor):
                                                                 min_size_order=min_size_market_order)
                     current_amount_qty += delta
 
-                side_index = 0 if limit_side == 'sell' else 1
+                side_index = 1 if limit_side == 'sell' else 0
                 current_price = self.data_provider.get_bbid_bask(ticker=limit_ticker)[side_index]
                 logger.debug(msg='Prices:',
                              extra=dict(price_limit_order=price_limit_order, current_price=current_price))
