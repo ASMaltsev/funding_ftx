@@ -41,7 +41,7 @@ def update_rpc(func):
         args[0].current_rpc = args[0].connector.USED_RPC
         current_rpc = args[0].current_rpc
         max_rpc = args[0].max_rpc
-        logger.info(msg=colored('Rate limits:', 'blue'), extra=dict(current_rpc=current_rpc, max_rpc=max_rpc))
+        logger.debug(msg=colored('Rate limits:', 'blue'), extra=dict(current_rpc=current_rpc, max_rpc=max_rpc))
         warning_rpc = _control_rpc(current_rpc, max_rpc, args[0].connector)
         args[0].warning_rpc = warning_rpc
         return func(*args, **kwargs)
@@ -142,13 +142,13 @@ class BinanceDataProvider(AbstractExecutorDataProvider):
             price = self.get_bbid_bask(ticker)[side_index]
             order_id, _ = self.make_limit_order(ticker=ticker, side=side, price=price, quantity=quantity,
                                                 reduce_only=reduce_only)
-            logger.debug(msg='Place LIMIT ORDER', extra=dict(ticker=ticker, order_id=order_id))
 
             time.sleep(0.5)
-
             status, executed_qty = self.get_order_status(ticker=ticker, order_id=order_id)
-            logger.debug(msg='Info LIMIT ORDER', extra=dict(ticker=ticker, status=status, order_id=order_id))
             if status != 'EXPIRED':
+                logger.info(msg='Info limit order:',
+                            extra=dict(ticker=ticker, status=status, order_id=order_id, executed_qty=executed_qty))
+
                 return status, order_id, price, executed_qty
 
     @update_rpc

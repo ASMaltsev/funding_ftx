@@ -127,7 +127,7 @@ class FundingExecutor(AbstractExecutor):
                              extra=dict(order_id=order_id, order_status=order_status, executed_qty=executed_qty,
                                         prev_executed_qty=prev_executed_qty))
 
-                logger.info(msg='Current position.', extra=dict(current_amount_qty=current_amount_qty))
+                logger.debug(msg='Current position.', extra=dict(current_amount_qty=current_amount_qty))
 
                 delta = round(executed_qty - prev_executed_qty, precision)
                 prev_executed_qty = executed_qty

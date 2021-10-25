@@ -50,7 +50,7 @@ class Logger:
 
         handler_stream = logging.StreamHandler()
         handler_file = logging.FileHandler(file_path)
-        handler_file.setLevel(logging.DEBUG)
+        handler_file.setLevel(logging.INFO)
 
         strfmt = '%(asctime)s.%(msecs)06d  %(levelname)s [%(name)s]  %(message)s'
         datefmt = '%Y-%m-%d %H:%M:%S'
