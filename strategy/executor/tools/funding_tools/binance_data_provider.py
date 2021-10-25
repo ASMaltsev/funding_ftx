@@ -19,9 +19,11 @@ def _control_rpc(current_rpc, max_rpc, connector) -> bool:
     @param max_rpc: maximum rpc
     @return: Is warning rpc?
     """
+    warning_min = 0.5
+    warning_max = 0.95
     bad_rpc = False
     while True:
-        if current_rpc > 0.96 * max_rpc:
+        if current_rpc > warning_max * max_rpc:
             bad_rpc = True
             sleep = 60
             logger.error(msg='You used all RPC. Sleep ',
@@ -29,7 +31,7 @@ def _control_rpc(current_rpc, max_rpc, connector) -> bool:
             time.sleep(sleep)
             connector.get_server_time()
             current_rpc = connector.USED_RPC
-        if 0.5 * max_rpc < current_rpc < 0.9 * max_rpc:
+        if warning_min * max_rpc < current_rpc < warning_max * max_rpc:
             logger.warning(msg='You used a lot of RPC', extra=dict(current_rpc=current_rpc, max_rpc=max_rpc))
             if not bad_rpc:
                 return True
