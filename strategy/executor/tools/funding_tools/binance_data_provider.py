@@ -8,7 +8,7 @@ from connectors import ConnectorRouter
 import connectors.exceptions
 from strategy.others import Logger
 from strategy.executor.tools.abstract_tools import AbstractExecutorDataProvider
-from strategy.executor.tools.funding_tools.binance_orderbook_ws import BinanceOrderBook
+from strategy.executor.tools.funding_tools.binance_orderbook_ws import WebSocketStream
 
 logger = Logger('DataProviderExecutor').create()
 
@@ -61,7 +61,7 @@ class BinanceDataProvider(AbstractExecutorDataProvider):
         self.current_rpc = 0
         self.max_rpc = self._get_max_limit()
         self.warning_rpc = False
-        self.orderbook_ws = None
+        self.ws = None
 
     def _get_max_limit(self) -> int:
         for type_limit in self.connector.get_exchange_info()['rateLimits']:
@@ -106,25 +106,32 @@ class BinanceDataProvider(AbstractExecutorDataProvider):
     def get_amount_positions(self, ticker: str) -> float:
         return self.connector.get_positions(ticker=ticker)[0]['positionAmt']
 
-    @update_rpc
     def get_bbid_bask(self, ticker: str) -> Tuple[float, float]:
         """
+        @update_rpc
          response = self.connector.get_bbid_bask(ticker=ticker)
          return float(response.get('bidPrice', None)), float(response.get('askPrice', None))
         """
         self._create_webosocket(ticker=ticker)
-        data = self.orderbook_ws.get_state()
+        data = self.ws.get_state_bbid_ask()
         while data is None:
-            data = self.orderbook_ws.get_state()
+            data = self.ws.get_state_bbid_ask()
         return float(data['b']), float(data['a'])
 
+    """
+    def get_trades(self, ticker):
+        self._create_webosocket(ticker=ticker)
+        data = self.ws.get_state_trades()
+        while data is None:
+            data = self.ws.get_state_trades()
+        return data
+    """
+
     def _create_webosocket(self, ticker):
-        if self.orderbook_ws is None:
-            self.orderbook_ws = BinanceOrderBook(section=self.section, ticker=ticker)
-            self.orderbook_ws.daemon = True
-            self.orderbook_ws.start()
-        else:
-            pass
+        if self.ws is None:
+            self.ws = WebSocketStream(section=self.section, ticker=ticker)
+            self.ws.daemon = True
+            self.ws.start()
 
     @update_rpc
     def get_order_status(self, ticker: str, order_id: int) -> Tuple[str, float]:
