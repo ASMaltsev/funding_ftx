@@ -20,7 +20,7 @@ class FundingExecutor(AbstractExecutor):
         self.start_amount_market = 0
         self.section = section
 
-    def execute(self, actions: dict) -> bool:
+    def execute(self, instructions: dict) -> bool:
         logger.info(msg='Executor is starting.')
         # parser = ParserActions(actions)
         # actions_for_execute = parser.parse()
@@ -172,8 +172,10 @@ class FundingExecutor(AbstractExecutor):
                     if price_limit_order != current_price:
                         is_cancel = self.data_provider.cancel_order(ticker=limit_ticker,
                                                                     order_id=order_id)
+
                         order_status, executed_qty = self.data_provider.get_order_status(ticker=limit_ticker,
                                                                                          order_id=order_id)
+
                         delta = round(executed_qty - prev_executed_qty, precision)
                         logger.info(msg='Params canceled orders',
                                     extra=dict(order_status=order_status, executed_qty=executed_qty, delta=delta,
@@ -200,6 +202,9 @@ class FundingExecutor(AbstractExecutor):
                             order_status, order_id, price_limit_order, executed_qty = \
                                 self.data_provider.make_safety_limit_order(ticker=limit_ticker, side=limit_side,
                                                                            quantity=limit_qty, reduce_only=reduce_only)
+
+                    order_status, executed_qty = self.data_provider.get_order_status(ticker=limit_ticker,
+                                                                                     order_id=order_id)
             return True
 
         except Exception as e:
