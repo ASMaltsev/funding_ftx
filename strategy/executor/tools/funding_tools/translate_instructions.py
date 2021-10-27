@@ -1,5 +1,9 @@
 from strategy.hyperparameters import hyperparams
 from strategy.executor.tools.funding_tools.binance_data_provider import BinanceDataProvider
+from strategy.others import Logger
+
+my_logger = Logger('TranslateInstructions')
+logger = my_logger.create()
 
 
 class TranslateInstructions:
@@ -17,7 +21,9 @@ class TranslateInstructions:
         instructions_coin_m = instructions.get('COIN-M')
         if instructions_coin_m is not None:
             executor_coin_m = self._parse(instructions_coin_m['actions'], 'COIN-M')
-        return executor_usdt_m + executor_coin_m
+        executor_instructions = executor_usdt_m + executor_coin_m
+        logger.info(msg='Final instructions: ', extra=dict(executor_instructions=executor_instructions))
+        return executor_instructions
 
     def _parse(self, instructions_section: dict, section: str):
         executor_instructions = []
@@ -63,7 +69,11 @@ class TranslateInstructions:
         total_balance = self.data_provider_usdt_m.get_account_info()['totalWalletBalance']
         precision = len(str(self.data_provider_usdt_m.min_size_for_market_order(quart_ticker)).split('.'))
         price = self.data_provider_usdt_m.get_price(quart_ticker)
-        return float(f"{total_balance * leverage * part / price:.{precision}f}")
+        result = float(f"{total_balance * leverage * part / price:.{precision}f}")
+        logger.info(msg='Calculation size for USDT-M',
+                    extra=dict(quart_ticker=quart_ticker, total_balance=total_balance, leverage=leverage,
+                               price=price, part=part, result=result))
+        return result
 
     def _size_coin_m(self, part: float, perp_ticker: str, ticker: str) -> float:
         leverage = hyperparams['COIN-M']['leverage_quart_current']
@@ -77,4 +87,8 @@ class TranslateInstructions:
         for symbols_info in self.data_provider_coin_m.get_exchange_info()['symbols']:
             if symbols_info['symbol'] == perp_ticker:
                 contract_price = float(symbols_info['contractSize'])
-        return float(str(total_balance * leverage * part * price_perp / contract_price).split('.')[0])
+        result = float(str(total_balance * leverage * part * price_perp / contract_price).split('.')[0])
+        logger.info(msg='Calculation size for COIN-M',
+                    extra=dict(perp_ticker=perp_ticker, total_balance=total_balance, leverage=leverage,
+                               price_perp=price_perp, contract_price=contract_price, part=part, result=result))
+        return result
