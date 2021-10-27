@@ -1,11 +1,12 @@
-from strategy.executor import FundingExecutor
+from strategy.executor.tools.funding_tools.executor import FundingExecutor
+from strategy.executor.tools.funding_tools.binance_data_provider import BinanceDataProvider
 from params import *
 
-FundingExecutor(api_key=api_key, secret_key=secret_key, section=section)._execute(
-    market_ticker=ticker_futures,
-    market_side=futures_side,
-    limit_ticker=ticker_swap,
-    limit_side=swap_side,
-    reduce_only=reduce_only,
-    total_amount=total_amount,
-    section=section)
+kwargs = {
+    'market_ticker': ticker_futures, 'limit_ticker': ticker_swap,
+    'limit_side': futures_side, 'market_side': swap_side,
+    'total_amount': total_amount, 'reduce_only': reduce_only
+}
+
+data_provider = BinanceDataProvider(api_key=api_key, secret_key=secret_key, section=section)
+FundingExecutor(data_provider).execute(**kwargs)

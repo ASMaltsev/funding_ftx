@@ -3,8 +3,6 @@ from termcolor import colored
 import time
 import sys
 from strategy.executor.tools.abstract_tools.abstract_executor import AbstractExecutor
-from strategy.executor.tools.funding_tools.parser_actions import ParserActions
-from strategy.executor.tools.funding_tools.binance_data_provider import BinanceDataProvider
 from strategy.others import Logger, send_log
 
 my_logger = Logger('Executor')
@@ -13,18 +11,10 @@ logger = my_logger.create()
 
 class FundingExecutor(AbstractExecutor):
 
-    def __init__(self, api_key: str, secret_key: str, section: str):
-        super().__init__(api_key, secret_key)
-        self.data_provider = BinanceDataProvider(api_key, secret_key, section)
+    def __init__(self, data_provider):
+        super().__init__(data_provider)
         self.start_amount_limit = 0
         self.start_amount_market = 0
-        self.section = section
-
-    def execute(self, instructions: dict) -> bool:
-        logger.info(msg='Executor is starting.')
-        # parser = ParserActions(actions)
-        # actions_for_execute = parser.parse()
-        return True
 
     def _work_before_new_limit_order(self, limit_ticker, market_ticker):
         logger.debug(msg=colored('Rate limits:', 'blue'),
@@ -32,7 +22,7 @@ class FundingExecutor(AbstractExecutor):
         self._control_rpc()
         self._log_current_positions(limit_ticker, market_ticker)
 
-    def check_positions(self, limit_ticker, market_ticker, market_ticker_side, section):
+    def check_positions(self, limit_ticker, market_ticker, market_ticker_side):
         max_coef_delta = 1.2
         self.data_provider.cancel_all_orders(limit_ticker)
         self.data_provider.cancel_all_orders(market_ticker)
@@ -47,7 +37,7 @@ class FundingExecutor(AbstractExecutor):
 
         delta = round(abs(current_position_limit) - abs(current_position_market), 4)
         logger.info(msg=f'CHECK POSITION.', extra=dict(delta=delta))
-        limit_amount = self._get_limit_amount(limit_ticker, section=section)
+        limit_amount = self._get_limit_amount(limit_ticker)
         if 0 < delta <= max_coef_delta * limit_amount:
             self.data_provider.make_safety_market_order(ticker=market_ticker,
                                                         side=market_ticker_side,
@@ -81,26 +71,23 @@ class FundingExecutor(AbstractExecutor):
             logger.error(msg='Delta positions > 0.Stopped.', extra=dict(delta=delta))
             sys.exit(0)
 
-    def _get_limit_amount(self, ticker: str, section: str) -> float:
+    def _get_limit_amount(self, ticker: str) -> float:
         """
         @param ticker: pair name
         @return: amount for one limit order
         """
-        if section == 'USDT-M':
-            if ticker.startswith('BTC'):
-                return 0.002
-            if ticker.startswith('ETH'):
-                return 0.03
-            raise NotImplementedError
-        elif section == 'COIN-M':
-            if ticker.startswith('BTC'):
-                return 1
-            if ticker.startswith('ETH'):
-                return 1
-            raise NotImplementedError
+        if ticker.startswith('BTCUSDT'):
+            return 0.002
+        elif ticker.startswith('ETHUSDT'):
+            return 0.03
+        elif ticker.startswith('BTCUSD'):
+            return 1
+        elif ticker.startswith('ETHUSD'):
+            return 1
+        raise NotImplementedError
 
-    def _execute(self, market_ticker: str, limit_ticker: str, limit_side: str, market_side: str,
-                 total_amount: float, reduce_only: bool, section: str) -> bool:
+    def execute(self, market_ticker: str, limit_ticker: str, limit_side: str, market_side: str,
+                total_amount: float, reduce_only: bool) -> bool:
         try:
             self.start_amount_limit = self.data_provider.get_amount_positions(limit_ticker)
             self.start_amount_market = self.data_provider.get_amount_positions(market_ticker)
@@ -110,7 +97,7 @@ class FundingExecutor(AbstractExecutor):
 
             precision = abs(str(min_size_market_order).find('.') - len(str(min_size_market_order))) + 1
             limit_qty = round(
-                min(self._get_limit_amount(ticker=limit_ticker, section=section), total_amount - current_amount_qty),
+                min(self._get_limit_amount(ticker=limit_ticker), total_amount - current_amount_qty),
                 precision)
 
             logger.info(msg='Start shopping.',
@@ -137,24 +124,24 @@ class FundingExecutor(AbstractExecutor):
                                                                 quantity=delta,
                                                                 min_size_order=min_size_market_order)
                     current_amount_qty += delta
-                    limit_qty = round(min(self._get_limit_amount(ticker=limit_ticker, section=section),
+                    limit_qty = round(min(self._get_limit_amount(ticker=limit_ticker),
                                           total_amount - current_amount_qty),
                                       precision)
 
                     if limit_qty == 0:
                         self.check_positions(limit_ticker=limit_ticker, market_ticker=market_ticker,
-                                             market_ticker_side=market_side, section=section)
+                                             market_ticker_side=market_side)
                         logger.info(msg='Finished.')
                         break
 
                     prev_executed_qty = 0
 
                     self._work_before_new_limit_order(limit_ticker, market_ticker)
-                    order_status, order_id, price_limit_order, executed_qty = self.data_provider.make_safety_limit_order(
-                        ticker=limit_ticker,
-                        side=limit_side,
-                        quantity=limit_qty,
-                        reduce_only=reduce_only)
+                    order_status, order_id, price_limit_order, executed_qty = self.data_provider. \
+                        make_safety_limit_order(ticker=limit_ticker,
+                                                side=limit_side,
+                                                quantity=limit_qty,
+                                                reduce_only=reduce_only)
                     logger.info(msg='Current position.', extra=dict(current_amount_qty=current_amount_qty))
 
                 elif order_status == 'PARTIALLY_FILLED' or order_status == 'NEW':
@@ -188,11 +175,11 @@ class FundingExecutor(AbstractExecutor):
                                                                         min_size_order=min_size_market_order)
                             current_amount_qty += delta
                             limit_qty = round(
-                                min(self._get_limit_amount(ticker=limit_ticker, section=section),
+                                min(self._get_limit_amount(ticker=limit_ticker),
                                     total_amount - current_amount_qty), precision)
                             if limit_qty == 0:
                                 self.check_positions(limit_ticker=limit_ticker, market_ticker=market_ticker,
-                                                     market_ticker_side=market_side, section=section)
+                                                     market_ticker_side=market_side)
                                 logger.info(msg='Finished.')
                                 break
 

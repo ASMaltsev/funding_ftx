@@ -4,18 +4,23 @@ from abc import ABC, abstractmethod
 class AbstractExecutor(ABC):
     """Executor interface"""
 
-    def __init__(self, api_key: str, secret_key: str):
+    def __init__(self, data_provider):
         """
-        @param api_key: client's api ket
-        @param secret_key: client's secret key
+        @param data_provider: provider for exchange
         """
-        self.api_key = api_key
-        self.secret_key = secret_key
+        self.data_provider = data_provider
 
     @abstractmethod
-    def execute(self, actions: dict) -> bool:
+    def execute(self, market_ticker: str, limit_ticker: str, limit_side: str, market_side: str,
+                total_amount: float, reduce_only: bool) -> bool:
         """
-        @param actions: message from strategy
-        @return bool: True if worked correctly False otherwise
+
+        @param market_ticker: ticker for market orders
+        @param limit_ticker: ticker for limit orders
+        @param limit_side: side for limit orders
+        @param market_side: side for market orders
+        @param total_amount: total amount
+        @param reduce_only: reduce only
+        @return: True if good False otherwise
         """
         raise NotImplementedError

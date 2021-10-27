@@ -1,5 +1,3 @@
-from termcolor import colored
-
 import time
 from typing import Tuple
 
@@ -77,6 +75,22 @@ class BinanceDataProvider(AbstractExecutorDataProvider):
             return int(response.get('orderId', None)), str(response.get('status', None))
         else:
             return -1, 'FILLED'
+
+    @update_rpc
+    def get_account_info(self):
+        return self.connector.get_account_info()
+
+    @update_rpc
+    def get_balance(self, symbol):
+        return self.connector.get_balances(symbol=symbol)
+
+    @update_rpc
+    def get_price(self, ticker):
+        return self.connector.get_price(ticker=ticker)
+
+    @update_rpc
+    def get_exchange_info(self, ):
+        return self.connector.get_exchange_info()
 
     @update_rpc
     def make_market_order(self, ticker: str, side: str, quantity: float) -> bool:
