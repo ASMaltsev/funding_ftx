@@ -17,8 +17,8 @@ class FundingExecutor(AbstractExecutor):
         self.start_amount_market = 0
 
     def _work_before_new_limit_order(self, limit_ticker, market_ticker):
-        logger.debug(msg=colored('Rate limits:', 'blue'),
-                     extra=dict(current_rpc=self.data_provider.current_rpc, max_rpc=self.data_provider.max_rpc))
+        logger.info(msg=colored('Rate limits:', 'blue'),
+                    extra=dict(current_rpc=self.data_provider.current_rpc, max_rpc=self.data_provider.max_rpc))
         self._control_rpc()
         self._log_current_positions(limit_ticker, market_ticker)
 
@@ -28,7 +28,6 @@ class FundingExecutor(AbstractExecutor):
         self.data_provider.cancel_all_orders(market_ticker)
         pos_limit_side = self.data_provider.get_amount_positions(limit_ticker)
         pos_market_side = self.data_provider.get_amount_positions(market_ticker)
-
         logger.info(msg=colored('Control positions.', 'green'),
                     extra=dict(pos_market_side=pos_market_side, pos_limit_side=pos_limit_side))
 
