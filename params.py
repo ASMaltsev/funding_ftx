@@ -19,5 +19,5 @@ ticker_futures = 'BTCUSD_211231'
 swap_side = 'sell'
 futures_side = 'buy'
 reduce_only = False
-total_amount = 1
+total_amount = 5000
 section = 'COIN-M'
