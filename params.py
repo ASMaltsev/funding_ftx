@@ -5,13 +5,13 @@
 
 
 
-#ShSh2
-api_key = 'OkL6vNlhn2g6xRT5rGCFZcigdlifeeDItakvzk5sfbgszo5WkQMOQPwT7hUKTMkH'
-secret_key = 'DF37JQmlVNZu0DnOeU8Yie0AAu7MZMprsleAeiRz5TEicv6wsADDhBUnHr9qc1Uv'
+#YM
+api_key  = 'QRjSmxIXbjCujcDH4FFn9YobT9B0e52diGa68JbuAGCHUCoOqaq3Ppig4KhhX3i2'
+secret_key = 't4EFPmyOdhqxdMz27QUcikK4srXRrvmPgL4rlXWvFtrMR6bEjCAnXQIrhu8CFY79'
 
 
 
-client_name = 'shsh2'
+client_name = 'YM'
 
 ticker_swap = 'BTCUSD_PERP'
 ticker_futures = 'BTCUSD_211231'
@@ -19,5 +19,5 @@ ticker_futures = 'BTCUSD_211231'
 swap_side = 'sell'
 futures_side = 'buy'
 reduce_only = False
-total_amount = 6000
+total_amount = 2000
 section = 'COIN-M'
