@@ -11,7 +11,7 @@ secret_key = 'DF37JQmlVNZu0DnOeU8Yie0AAu7MZMprsleAeiRz5TEicv6wsADDhBUnHr9qc1Uv'
 
 
 
-client_name = 'test'
+client_name = 'shsh2'
 
 ticker_swap = 'ETHUSD_PERP'
 ticker_futures = 'ETHUSD_211231'
