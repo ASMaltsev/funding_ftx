@@ -14,7 +14,7 @@ secret_key = 'C6PiycF8lSHUuULY4BnvbpPPZinxs9vaFmlHGLazStYbW5qSTM96OsahQNR6dnR0'
 client_name = 'shsh1'
 
 ticker_swap = 'BTCUSD_PERP'
-ticker_futures = 'BTCUSD_211231'
+ticker_futures = 'BTCUSD_220325'
 
 swap_side = 'sell'
 futures_side = 'buy'
