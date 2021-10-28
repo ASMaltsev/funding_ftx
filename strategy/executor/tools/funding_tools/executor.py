@@ -80,7 +80,7 @@ class FundingExecutor(AbstractExecutor):
         elif ticker.startswith('ETHUSDT'):
             return 0.03
         elif ticker.startswith('BTCUSD'):
-            return 2
+            return 1
         elif ticker.startswith('ETHUSD'):
             return 1
         raise NotImplementedError
