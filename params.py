@@ -5,20 +5,19 @@
 
 
 
-
-# # TEST API
-api_key = 'IdPorsZNdskqCUNbO5aN0w6TY67Kfl0syZjHDV3ZP9tOMuM6k3KzovNizMKmBpix'
-secret_key = '7qE1lC0fVpNF7i9Lb08odC1HaV6m2LILmzy2SSEnAXTwqOVaJhqA8cVz1tzPzP0A'
-
+#ShSh2
+api_key = 'OkL6vNlhn2g6xRT5rGCFZcigdlifeeDItakvzk5sfbgszo5WkQMOQPwT7hUKTMkH'
+secret_key = 'DF37JQmlVNZu0DnOeU8Yie0AAu7MZMprsleAeiRz5TEicv6wsADDhBUnHr9qc1Uv'
 
 
-client_name = 'test_usdtm'
 
-ticker_swap = 'ETHUSDT'
-ticker_futures = 'ETHUSDT_211231'
+client_name = 'shsh2'
+
+ticker_swap = 'BTCUSD_PERP'
+ticker_futures = 'BTCUSD_211231'
 
 swap_side = 'sell'
 futures_side = 'buy'
 reduce_only = False
-total_amount = 0.2
-section = 'USDT-M'
+total_amount = 5500
+section = 'COIN-M'
