@@ -28,7 +28,6 @@ class FundingExecutor(AbstractExecutor):
         self.data_provider.cancel_all_orders(market_ticker)
         pos_limit_side = self.data_provider.get_amount_positions(limit_ticker)
         pos_market_side = self.data_provider.get_amount_positions(market_ticker)
-
         logger.info(msg=colored('Control positions.', 'green'),
                     extra=dict(pos_market_side=pos_market_side, pos_limit_side=pos_limit_side))
 
