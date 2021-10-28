@@ -12,7 +12,7 @@ secret_key = '7qE1lC0fVpNF7i9Lb08odC1HaV6m2LILmzy2SSEnAXTwqOVaJhqA8cVz1tzPzP0A'
 
 
 
-client_name = 'YM'
+client_name = 'test_usdtm'
 
 ticker_swap = 'ETHUSDT'
 ticker_futures = 'ETHUSDT_211231'
