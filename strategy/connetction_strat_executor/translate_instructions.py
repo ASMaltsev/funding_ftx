@@ -1,4 +1,4 @@
-from strategy.hyperparameters import hyperparams
+from strategy.hyperparams.hyperparameters import hyperparams
 from strategy.executor.tools.funding_tools.binance_data_provider import BinanceDataProvider
 from strategy.others import Logger
 
