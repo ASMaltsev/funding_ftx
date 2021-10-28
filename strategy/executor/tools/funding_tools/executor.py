@@ -99,6 +99,8 @@ class FundingExecutor(AbstractExecutor):
             limit_qty = round(
                 min(self._get_limit_amount(ticker=limit_ticker), total_amount - current_amount_qty),
                 precision)
+            logger.info('Sleeping 60 sec for revocation RPC...')
+            time.sleep(60)
 
             logger.info(msg='Start shopping.',
                         extra=dict(market_ticker=market_ticker, market_side=market_side, limit_ticker=limit_ticker,
@@ -189,7 +191,7 @@ class FundingExecutor(AbstractExecutor):
                             order_status, order_id, price_limit_order, executed_qty = \
                                 self.data_provider.make_safety_limit_order(ticker=limit_ticker, side=limit_side,
                                                                            quantity=limit_qty, reduce_only=reduce_only)
-
+                    time.sleep(0.2)
                     order_status, executed_qty = self.data_provider.get_order_status(ticker=limit_ticker,
                                                                                      order_id=order_id)
             return True
