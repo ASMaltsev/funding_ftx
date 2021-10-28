@@ -4,7 +4,7 @@ from params import *
 
 kwargs = {
     'market_ticker': ticker_futures, 'limit_ticker': ticker_swap,
-    'limit_side': futures_side, 'market_side': swap_side,
+    'limit_side': swap_side, 'market_side': futures_side,
     'total_amount': total_amount, 'reduce_only': reduce_only
 }
 
