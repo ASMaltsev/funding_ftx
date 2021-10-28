@@ -5,11 +5,6 @@ from strategy.others import Logger
 import time
 import itertools
 
-
-# A = 6
-# k = 4.95
-
-
 class FundingAlpha(AbstractAlpha):
 
     def __init__(self, list_usdtm, list_coinm, A, k, time_exit, share_usdtm, share_coinm, base_fr_earn):
@@ -50,6 +45,9 @@ class FundingAlpha(AbstractAlpha):
 
     # Setup
     def setup(self, state, pairs_usdtm, pairs_coinm):
+
+        tte = self.dataprovider.get_tte(q)
+
         for pair_usdtm in pairs_usdtm:
             asset = 'BTC' if pair_usdtm[0].startswith('BTC') else 'ETH'
             size, spread_pct, spread_apr = self.get_clam_size(self.k, pair_usdtm[0], pair_usdtm[1])
