@@ -83,6 +83,8 @@ class FundingExecutor(AbstractExecutor):
             return 2
         elif ticker.startswith('ETHUSD'):
             return 10
+        elif ticker.startswith('BNBUSD'):
+            return 10
         raise NotImplementedError
 
     def execute(self, market_ticker: str, limit_ticker: str, limit_side: str, market_side: str,
