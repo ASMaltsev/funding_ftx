@@ -2,14 +2,14 @@ from termcolor import colored
 
 import time
 import sys
-from strategy.executor.tools.abstract_tools.abstract_executor import AbstractExecutor
-from strategy.others import Logger, send_log
+from strategy.executor.abstract_executor import AbstractExecutor
+from strategy.logging import Logger, send_log
 
 my_logger = Logger('Executor')
 logger = my_logger.create()
 
 
-class FundingExecutor(AbstractExecutor):
+class BinanceExecutor(AbstractExecutor):
 
     def __init__(self, data_provider):
         super().__init__(data_provider)

@@ -3,7 +3,7 @@ import random
 import asyncio
 import websockets
 from threading import Thread
-from strategy.others import Logger
+from strategy.logging import Logger
 
 logger = Logger('WebSocket').create()
 

@@ -1,5 +1,6 @@
-from strategy.executor.tools.funding_tools.executor import FundingExecutor
-from strategy.executor.tools.funding_tools.binance_data_provider import BinanceDataProvider
+from strategy.executor.binance_executor.executor import BinanceExecutor
+
+from strategy.data_provider.binanace_provider.binance_data_provider import BinanceDataProvider
 from params import *
 
 kwargs = {
@@ -9,4 +10,4 @@ kwargs = {
 }
 
 data_provider = BinanceDataProvider(api_key=api_key, secret_key=secret_key, section=section)
-FundingExecutor(data_provider).execute(**kwargs)
+BinanceExecutor(data_provider).execute(**kwargs)

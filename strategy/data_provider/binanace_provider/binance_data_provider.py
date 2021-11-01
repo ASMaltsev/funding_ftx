@@ -4,9 +4,9 @@ from typing import Tuple
 from connectors import ConnectorRouter
 
 import connectors.exceptions
-from strategy.others import Logger
-from strategy.executor.tools.abstract_tools import AbstractExecutorDataProvider
-from strategy.executor.tools.funding_tools.binance_orderbook_ws import WebSocketStream
+from strategy.logging import Logger
+from strategy.data_provider.abstract_provider.abstract_data_provider import AbstractExecutorDataProvider
+from strategy.data_provider.binanace_provider.binance_orderbook_ws import WebSocketStream
 
 logger = Logger('DataProviderExecutor').create()
 
@@ -206,6 +206,10 @@ class BinanceDataProvider(AbstractExecutorDataProvider):
                 for f in filters:
                     if f.get('tickSize') is not None:
                         return f['tickSize']
+
+    @update_rpc
+    def get_available_balance(self, ticker, section):
+        pass
 
     @staticmethod
     def _get_inverse_market_op(side):
