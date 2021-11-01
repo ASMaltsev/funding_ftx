@@ -5,18 +5,18 @@
 
 
 
-#l
-api_key = 'J1psBQNbT8hcNRo6Zaj0S3LWrxcnuO24XdsuQArHG9EzA1Nea7mA8JK6hPOtbijB'
-secret_key = 'LrCwQvUb0JMuC5DFn0SVyS9WVhxaGt7hM1pFewsXdqKSWM5P0JeBLq69ufV6rTYR'
+#ML
+api_key = '6dASmxxyZ47TxvxVy6LtRv0HeZPGqn6ybfJqyQoveL2bYg8PPeMYzRs8lG3SGuVZ'
+secret_key = 'RuD9h5JGzPkpo6M182O3BMTo5em8eMZN62JbmDqHDrVSsQw6T865W6B2NHnNMzCj'
 
 
-client_name = 'l'
+client_name = 'ML'
 
-ticker_swap = 'BNBUSD_PERP'
-ticker_futures = 'BNBUSD_220325'
+ticker_swap = 'ETHUSD_PERP'
+ticker_futures = 'ETHUSD_220325'
 
 swap_side = 'sell'
 futures_side = 'buy'
 reduce_only = False
-total_amount = 244
+total_amount = 1000
 section = 'COIN-M'
