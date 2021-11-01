@@ -9,11 +9,11 @@ secret_key = 'bPszoss42LPnlCEaxxRLjMrJNJ1bDQdWnpc0Q3fGRAt8Q6JIaEOgLdHMP3RumtxX'
 
 client_name = 'kkk'
 
-ticker_swap = 'BTCUSD_PERP'
-ticker_futures = 'BTCUSD_220325'
+ticker_swap = 'ETHUSD_PERP'
+ticker_futures = 'ETHUSD_220325'
 
 swap_side = 'sell'
 futures_side = 'buy'
 reduce_only = False
-total_amount = 196
+total_amount = 4400
 section = 'COIN-M'
