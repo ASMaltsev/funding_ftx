@@ -3,17 +3,15 @@
 
 
 
+#SK
+api_key = 'qNlf8WQoTg3oYH9HDpEiQo3lJh0pRwBpodXHac0PPiOov93o3GknFIcYYW3ZurfN'
+secret_key = 'vVPMMbtKHMRdD4IF5CeIi182z54AthnfuSrjQSLHiO1WpckB0TvGVg1lQQPS0vTP'
 
 
-#PG, USDT&BTC&ETH:
-api_key = 'knI67PXwJ86oDnLWRfobodzyU0vsuUknJk9BYe2zjgnK3TnmgSP1ZOriLVRtE8TX'
-secret_key = 'YZmQgHvXZvujuAPaabTvYUSiNxqQd7PIseFpmEoj3fdaZUrlWW8XkkX8lgxlCmH1'
-
-
-client_name = 'PG'
+client_name = 'SK'
 
 ticker_swap = 'ETHUSD_PERP'
-ticker_futures = 'ETHUSD_211231'
+ticker_futures = 'ETHUSD_220325'
 
 swap_side = 'sell'
 futures_side = 'buy'
