@@ -10,7 +10,7 @@ api_key = '68HCpwMnmG9Q8tPqQOSj4xL4Y1aTJoQcvuOz258yHq450toFaGmZBHkixxNrOrVT'
 secret_key = '4sorjQMmBN19KAgEDhNdQUZJaErCy3bPHWrhwp0NM155QNduZAthpCOKIh0sT7mA'
 
 
-client_name = 'ML'
+client_name = 'MP'
 
 ticker_swap = 'ETHUSD_PERP'
 ticker_futures = 'ETHUSD_211231'
