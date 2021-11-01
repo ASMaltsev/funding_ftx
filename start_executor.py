@@ -9,5 +9,4 @@ kwargs = {
     'total_amount': total_amount, 'reduce_only': reduce_only
 }
 
-data_provider = BinanceDataProvider(api_key=api_key, secret_key=secret_key, section=section)
-BinanceExecutor(data_provider).execute(**kwargs)
+BinanceExecutor(api_key=api_key, secret_key=secret_key, section=section, **kwargs).execute()

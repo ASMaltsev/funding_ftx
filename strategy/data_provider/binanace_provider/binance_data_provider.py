@@ -89,7 +89,14 @@ class BinanceDataProvider(AbstractExecutorDataProvider):
         return self.connector.get_price(ticker=ticker)
 
     @update_rpc
-    def get_exchange_info(self, ):
+    def get_contract_size(self, symbol):
+        for symbols_info in self.connector.get_exchange_info()['symbols']:
+            if symbols_info['symbol'] == symbol:
+                return float(symbols_info['contractSize'])
+        return 0
+
+    @update_rpc
+    def get_exchange_info(self):
         return self.connector.get_exchange_info()
 
     @update_rpc
