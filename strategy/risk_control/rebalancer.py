@@ -1,5 +1,5 @@
 from strategy.data_provider.binanace_provider.binance_data_provider import BinanceDataProvider
-from strategy.hyperparams import ProviderHyperParams, TypeActive
+from strategy.hyperparams import AccountHyperParams
 from strategy.logging import Logger
 
 logger = Logger('Rebalancer').create()
@@ -9,7 +9,7 @@ class Rebalancer:
     def __init__(self, data_provider_usdt_m: BinanceDataProvider, data_provider_coin_m: BinanceDataProvider):
         self.data_provider_usdt_m = data_provider_usdt_m
         self.data_provider_coin_m = data_provider_coin_m
-        self.provider_hyperparams = ProviderHyperParams()
+        self.provider_hyperparams = AccountHyperParams()
 
     def analyze_account(self) -> dict:
         coin_m_close = self._analyze_account_coin_m()
@@ -22,7 +22,7 @@ class Rebalancer:
         total_wallet_balance = float(account_info['totalWalletBalance'])
         available_balance = float(account_info['availableBalance'])
         section = 'USDT-M'
-        assets = self.provider_hyperparams.get_all_assets(section)
+        assets = ['BTC', 'ETH']
         if available_balance / total_wallet_balance > 1:
             return {asset: 0 for asset in assets}
         else:
@@ -46,7 +46,6 @@ class Rebalancer:
                                                          current_price=current_price_perp,
                                                          twb=total_wallet_balance)
                         leverages_dict[asset] = {'perp': [perp, perp_lev], 'quart': [ticker_quart, quart_lev]}
-
             max_leverage = self.provider_hyperparams.get_max_leverage(section=section)
             l_quart = 0
             l_perp = 0
@@ -84,7 +83,7 @@ class Rebalancer:
         rebalance = {}
         for asset, balances in balances_dict.items():
             try:
-                if balances[0] / balances[1] < 0.05:
+                if balances[0] / balances[1] > 1:
                     rebalance[asset] = {'volume': 0.0, 'quart': None}
                 else:
                     perp, curr_q, next_q = self.provider_hyperparams.get_futures(section='COIN-M', asset=asset)

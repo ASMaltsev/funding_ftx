@@ -2,13 +2,14 @@ import json
 import random
 import asyncio
 import websockets
-from threading import Thread
+from threading import Thread, Lock
 from strategy.logging import Logger
 
 logger = Logger('WebSocket').create()
 
 
-class WebSocketStream(Thread):
+class BinanceOrderBook(Thread):
+    RECONNECT_INTERVAL = 23 * 60 * 60
 
     def __init__(self, ticker: str, section: str):
         super().__init__()
@@ -19,43 +20,41 @@ class WebSocketStream(Thread):
         else:
             raise KeyError('Wrong section')
         self.ticker = ticker.lower()
+        self.stream_url = f'{self.base_url}/ws/{self.ticker}@bookTicker'
         self.loop = asyncio.get_event_loop()
+        self.connect_lock = Lock()
         self.ws = None
         self.id = None
-        self.state_bbid_ask = None
-        # self.state_trades = None
+        self.state = None
 
     def run(self) -> None:
-        stream_url_book_ticker = f'{self.base_url}/ws/{self.ticker}@bookTicker'
-        # stream_url_trades = f'{self.base_url}/ws/{self.ticker}@trade'
+        self.loop.run_until_complete(self._connect_ws(self.stream_url))
+        logger.info('Connected')
+        self.loop.run_until_complete(self._subscribe())
+        logger.info('Subscribed')
+        self.loop.run_until_complete(asyncio.gather(self._receive_messages(), self._daily_reconnect(), loop=self.loop))
 
-        self.loop.run_until_complete(self._connect_ws(stream_url_book_ticker))
-        # self.loop.run_until_complete(self._connect_ws(stream_url_trades))
-        logger.info(msg='Websockets connected')
-
-        self.loop.run_until_complete(self._subscribe('bookTicker'))
-        # self.loop.run_until_complete(self._subscribe('trade'))
-
-        logger.info(msg='Websockets subscribed')
-        self.loop.run_until_complete(self._receive_messages())
-
-    def get_state_bbid_ask(self):
-        return self.state_bbid_ask
-
-    """
-    def get_state_trades(self):
-        return self.state_trades
-    """
+    def get_state(self):
+        return self.state
 
     async def _connect_ws(self, url):
         self.ws = await websockets.connect(url, ping_interval=360)
 
-    async def _subscribe(self, endpoint):
+    async def _subscribe(self):
         self.id = random.randint(1, 9999)
         payload = {"method": "SUBSCRIBE",
-                   "params": [f'{self.ticker}@{endpoint}'],
+                   "params": [f'{self.ticker}@bookTicker'],
                    "id": self.id}
         await self.ws.send(json.dumps(payload))
+
+    async def _daily_reconnect(self):
+        while True:
+            await asyncio.sleep(self.RECONNECT_INTERVAL)
+            with self.connect_lock:
+                logger.info('Start reconnecting...')
+                await self._connect_ws(self.stream_url)
+                await self._subscribe()
+                logger.info('Reconnected')
 
     async def _receive_messages(self):
         while True:
@@ -64,10 +63,7 @@ class WebSocketStream(Thread):
 
     async def _process_message(self, message):
         if message.get('e') == 'bookTicker' and message.get('s') == self.ticker.upper():
-            if self.state_bbid_ask is None or int(message.get('u')) > int(self.state_bbid_ask.get('u')):
-                self.state_bbid_ask = message
-        # elif message.get('e') == 'trade' and message.get('s') == self.ticker.upper():
-        #    if self.state_trades is None or int(message.get('E')) > int(self.state_trades.get('E')):
-        #        self.state_trades = message
+            if self.state is None or message.get('u') > self.state.get('u'):
+                self.state = message
         else:
-            logger.warning(msg=f'Incorrect message = {message}')
+            logger.warning(msg=message)
