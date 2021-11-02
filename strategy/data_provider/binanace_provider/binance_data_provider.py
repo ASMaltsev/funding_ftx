@@ -1,4 +1,5 @@
 import time
+from datetime import datetime
 from typing import Tuple
 
 from connectors import ConnectorRouter
@@ -158,6 +159,35 @@ class BinanceDataProvider(AbstractExecutorDataProvider):
     def get_order_status(self, ticker: str, order_id: int) -> Tuple[str, float]:
         response = self.connector.status_order(ticker=ticker, order_id=order_id)
         return response.get('status', None), float(response.get('executedQty', None))
+
+    @update_rpc
+    def get_mid_price(self, ticker):
+        bbid_bask = self.connector.get_bbid_bask(ticker)
+        bbid = float(bbid_bask['bidPrice'])
+        bask = float(bbid_bask['askPrice'])
+        mid_price = (bbid + bask) / 2
+        return mid_price
+
+    @update_rpc
+    def get_spread(self, ticker_swap, ticker_quart):
+        price_swap = self.get_price(ticker_swap)
+        price_quart = self.get_price(ticker_quart)
+
+        spread_pct = (price_quart - price_swap) / price_swap
+        tte = self.get_tte(ticker_quart)
+        spread_apr = spread_pct * 365 / tte
+
+        return spread_pct, spread_apr
+
+    def get_tte(self, ticker_quart) -> int:
+        tte = ticker_quart.split('_')[1]
+        y = '20' + tte[:2]
+        m = tte[2:4]
+        d = tte[4:]
+        date = f'{y}/{m}/{d}'
+        date = datetime.strptime(date, "%Y/%m/%d")
+        tte = (date - datetime.utcnow()).days
+        return tte
 
     @update_rpc
     def make_safety_limit_order(self, ticker: str, side: str, quantity: float, reduce_only: bool) \

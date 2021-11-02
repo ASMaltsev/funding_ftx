@@ -1,7 +1,7 @@
 from strategy.alpha.tools.abstract_tools import AbstractAlpha
-from strategy.alpha.tools.funding_tools.alpha_data_provider_binance import DataProviderFunding
 from strategy.hyperparams import ProviderHyperParamsStrategy
 from strategy.logging import Logger
+from strategy.data_provider import BinanceDataProvider
 
 import itertools
 
@@ -31,7 +31,9 @@ class FundingAlpha(AbstractAlpha):
                                                                    list_usdt_m=self.list_usdt_m,
                                                                    list_coin_m=self.list_coin_m))
 
-        self.data_provider = DataProviderFunding()
+        self.data_provider_usdt_m = BinanceDataProvider(api_key='', secret_key='', section='USDT-M')
+        self.data_provider_coin_m = BinanceDataProvider(api_key='', secret_key='', section='COIN-M')
+
         self.state = {
             'USDT-M': {'actions': {}},
             'COIN-M': {'actions': {}}
@@ -51,11 +53,12 @@ class FundingAlpha(AbstractAlpha):
         return state
 
     # Setup
-    def setup(self, state, pairs_usdt_m, pairs_coin_m, time_exit, share_coinm):
+    def setup(self, state, pairs_usdt_m, pairs_coin_m, time_exit, share_coin_m):
 
         for pair_usdt_m in pairs_usdt_m:
             asset = 'BTC' if pair_usdt_m[0].startswith('BTC') else 'ETH'
-            size, spread_pct, spread_apr = self.get_clam_size(self.k, pair_usdt_m[0], pair_usdt_m[1])
+            size, spread_pct, spread_apr = self.get_clam_size(self.k, pair_usdt_m[0], pair_usdt_m[1],
+                                                              self.data_provider_usdt_m)
             logger.info(msg='Spread:', extra=dict(tickers=pair_usdt_m, spread=spread_apr))
             if spread_apr < 0:
                 size = 1
@@ -63,7 +66,7 @@ class FundingAlpha(AbstractAlpha):
             else:
                 size = min(1, size)
                 if self.base_fr_earn - spread_apr > self.A:
-                    tte = self.data_provider.get_tte(pair_usdt_m[1])
+                    tte = self.data_provider_usdt_m.get_tte(pair_usdt_m[1])
                     if tte <= self.save_time:
                         size = size
                     else:
@@ -74,21 +77,22 @@ class FundingAlpha(AbstractAlpha):
 
         for pair_coin_m in pairs_coin_m:
             asset = 'BTC' if pair_coin_m[0].startswith('BTC') else 'ETH'
-            quart = 'current' if int(pair_coin_m[1].split('_')[1]) == share_coinm['current'][0] else 'next'
-            size, spread_pct, spread_apr = self.get_clam_size(self.k, pair_coin_m[0], pair_coin_m[1])
+            quart = 'current' if int(pair_coin_m[1].split('_')[1]) == share_coin_m['current'][0] else 'next'
+            size, spread_pct, spread_apr = self.get_clam_size(self.k, pair_coin_m[0], pair_coin_m[1],
+                                                              self.data_provider_coin_m)
             logger.info(msg='Spread:', extra=dict(tickers=pair_coin_m, spread=spread_apr))
 
             size = min(1, size)
 
             if self.base_fr_earn - spread_apr > self.A:
-                tte = self.data_provider.get_tte(pair_coin_m[1])
+                tte = self.data_provider_coin_m.get_tte(pair_coin_m[1])
                 if tte <= self.save_time:
                     size = size
                 else:
                     size = 1
 
             if 0 <= size <= 1:
-                state['COIN-M']['actions'][f'{asset}_{quart}'] = ['setup', size * share_coinm[quart][1], pair_coin_m]
+                state['COIN-M']['actions'][f'{asset}_{quart}'] = ['setup', size * share_coin_m[quart][1], pair_coin_m]
 
         return state
 
@@ -96,17 +100,18 @@ class FundingAlpha(AbstractAlpha):
         sections = ['USDT-M', 'COIN-M']
         for s in sections:
             assets = list(state[s]['actions'].keys())
+            data_provider = self.data_provider_usdt_m if s == 'USDT-M' else self.data_provider_coin_m
             for asset in assets:
                 pair = state[s]['actions'][asset][-1]
                 q = state[s]['actions'][asset][-1][-1]
-                tte = self.data_provider.get_tte(q)
+                tte = data_provider.get_tte(q)
                 if tte <= time_exit:
                     state[s]['actions'][asset] = ['exit', 0, pair]
 
         return state
 
-    def get_clam_size(self, k, ticker_swap, ticker_quart):  # k = 4.95
-        spread_pct, spread_apr = self.data_provider.get_spread(ticker_swap, ticker_quart)
+    def get_clam_size(self, k, ticker_swap, ticker_quart, data_provider):
+        spread_pct, spread_apr = data_provider.get_spread(ticker_swap, ticker_quart)
         return (k / spread_apr), spread_pct, spread_apr
 
     def list_parser(self):
