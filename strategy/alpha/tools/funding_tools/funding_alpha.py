@@ -48,17 +48,18 @@ class FundingAlpha(AbstractAlpha):
 
         state = self.state.copy()
 
-        state = self.setup(state, pairs_usdt_m, pairs_coin_m, self.time_exit, share_coin_m)
+        state = self.setup(state, pairs_usdt_m, pairs_coin_m, share_coin_m)
         state = self.exit_position(state, self.time_exit)
         return state
 
     # Setup
-    def setup(self, state, pairs_usdt_m, pairs_coin_m, time_exit, share_coin_m):
+    def setup(self, state, pairs_usdt_m, pairs_coin_m, share_coin_m):
 
         for pair_usdt_m in pairs_usdt_m:
             asset = 'BTC' if pair_usdt_m[0].startswith('BTC') else 'ETH'
             size, spread_pct, spread_apr = self.get_clam_size(self.k, pair_usdt_m[0], pair_usdt_m[1],
                                                               self.data_provider_usdt_m)
+
             logger.info(msg='Spread:', extra=dict(tickers=pair_usdt_m, spread=spread_apr))
             if spread_apr < 0:
                 size = 1
@@ -80,6 +81,7 @@ class FundingAlpha(AbstractAlpha):
             quart = 'current' if int(pair_coin_m[1].split('_')[1]) == share_coin_m['current'][0] else 'next'
             size, spread_pct, spread_apr = self.get_clam_size(self.k, pair_coin_m[0], pair_coin_m[1],
                                                               self.data_provider_coin_m)
+
             logger.info(msg='Spread:', extra=dict(tickers=pair_coin_m, spread=spread_apr))
 
             size = min(1, size)
@@ -110,7 +112,8 @@ class FundingAlpha(AbstractAlpha):
 
         return state
 
-    def get_clam_size(self, k, ticker_swap, ticker_quart, data_provider):
+    @staticmethod
+    def get_clam_size(k, ticker_swap, ticker_quart, data_provider):
         spread_pct, spread_apr = data_provider.get_spread(ticker_swap, ticker_quart)
         return (k / spread_apr), spread_pct, spread_apr
 
