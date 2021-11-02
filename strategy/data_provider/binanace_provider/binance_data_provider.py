@@ -241,8 +241,8 @@ class BinanceDataProvider(AbstractExecutorDataProvider):
             if symbol_info['symbol'] == ticker:
                 filters = symbol_info['filters']
                 for f in filters:
-                    if f.get('tickSize') is not None:
-                        return f['tickSize']
+                    if f.get('minQty') is not None:
+                        return f['minQty']
 
     @update_rpc
     def get_available_balance(self, ticker, section):

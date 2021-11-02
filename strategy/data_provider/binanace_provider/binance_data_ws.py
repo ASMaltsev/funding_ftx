@@ -8,7 +8,7 @@ from strategy.logging import Logger
 logger = Logger('WebSocket').create()
 
 
-class BinanceOrderBook(Thread):
+class WebSocketStream(Thread):
     RECONNECT_INTERVAL = 23 * 60 * 60
 
     def __init__(self, ticker: str, section: str):
