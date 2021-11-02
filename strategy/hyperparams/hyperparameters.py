@@ -43,9 +43,9 @@ strategy_hyperparams = {
                     'BTC':
 
                         {
-                            'perp': 'ETHUSD_PERP',
-                            'current': 'ETHUSD_211231',
-                            'next': 'ETHUSD_220325',
+                            'perp': 'BTCUSD_PERP',
+                            'current': 'BTCUSD_211231',
+                            'next': 'BTCUSD_220325',
                         }
                 }
         }

@@ -129,25 +129,11 @@ class BinanceDataProvider(AbstractExecutorDataProvider):
         return self.connector.get_positions(ticker=ticker)[0]['positionAmt']
 
     def get_bbid_bask(self, ticker: str) -> Tuple[float, float]:
-        """
-        @update_rpc
-         response = self.connector.get_bbid_bask(ticker=ticker)
-         return float(response.get('bidPrice', None)), float(response.get('askPrice', None))
-        """
         self._create_webosocket(ticker=ticker)
-        data = self.ws.get_state_bbid_ask()
+        data = self.ws.get_state()
         while data is None:
-            data = self.ws.get_state_bbid_ask()
+            data = self.ws.get_state()
         return float(data['b']), float(data['a'])
-
-    """
-    def get_trades(self, ticker):
-        self._create_webosocket(ticker=ticker)
-        data = self.ws.get_state_trades()
-        while data is None:
-            data = self.ws.get_state_trades()
-        return data
-    """
 
     def _create_webosocket(self, ticker):
         if self.ws is None:

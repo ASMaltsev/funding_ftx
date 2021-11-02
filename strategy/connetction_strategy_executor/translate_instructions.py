@@ -71,13 +71,20 @@ class TranslateInstructions:
     def _size_usdt_m(self, part: float, quart_ticker: str) -> float:
         leverage = self.account_hyperparams.get_max_leverage(section='USDT-M')
         total_balance = self.data_provider_usdt_m.get_account_info()['totalWalletBalance']
-        precision = len(str(self.data_provider_usdt_m.min_size_for_market_order(quart_ticker)).split('.'))
+        precision = self._precision(quart_ticker)
         price = self.data_provider_usdt_m.get_price(quart_ticker)
         result = float(f"{total_balance * leverage * part / price:.{precision}f}")
         logger.info(msg='Calculation size for USDT-M',
                     extra=dict(quart_ticker=quart_ticker, total_balance=total_balance, leverage=leverage,
                                price=price, part=part, result=result))
         return result
+
+    @staticmethod
+    def _precision(ticker: str):
+        if ticker.startswith('ETH'):
+            return 2
+        elif ticker.startswith('BTC'):
+            return 3
 
     def _size_coin_m(self, part: float, asset: str, perp_ticker: str) -> float:
         leverage = self.account_hyperparams.get_max_leverage(section='COIN-M')
