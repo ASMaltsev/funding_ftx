@@ -4,7 +4,7 @@ strategy_hyperparams = {
     'A': -0.4,
     'k': 0.0495,
     'time_exit': 9,
-    'save_time': lambda x: x + 5,
+    'save_time': lambda x: x + 100,
     'USDT-M':
         {
             'share':
