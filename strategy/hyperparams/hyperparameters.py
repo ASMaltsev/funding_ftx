@@ -1,7 +1,6 @@
 strategy_hyperparams = {
     'base_fr_earn': 0.1095,
-    # 0.04
-    'A': -0.4,
+    'A': 0.04,
     'k': 0.0495,
     'time_exit': 9,
     'save_time': lambda x: x + 100,
