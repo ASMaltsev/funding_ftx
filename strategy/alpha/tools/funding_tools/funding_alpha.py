@@ -1,6 +1,6 @@
 from strategy.alpha.tools.abstract_tools import AbstractAlpha
 from strategy.alpha.tools.funding_tools.alpha_data_provider_binance import DataProviderFunding
-#from strategy.others import Logger
+# from strategy.others import Logger
 
 import itertools
 
@@ -15,25 +15,25 @@ class FundingAlpha(AbstractAlpha):
         self.time_exit = time_exit
         self.save_time = save_time
 
-        self.share_usdtm = share_usdtm
-        self.share_coinm = share_coinm
+        self.share_usdt_m = share_usdtm
+        self.share_coin_m = share_coinm
 
-        self.list_coinm = list_coinm  # ['ETHUSDT', 'BTCUSDT', 'ETHUSDT_211231', 'BTCUSDT_211231']
-        self.list_usdtm = list_usdtm  # ['ETHUSD_PERP', 'BTCUSD_PERP', 'BTCUSD_211231', 'ETHUSD_211231', 'BTCUSD_220325', 'ETHUSD_220325']
+        self.list_coin_m = list_coinm  # ['ETHUSDT', 'BTCUSDT', 'ETHUSDT_211231', 'BTCUSDT_211231']
+        self.list_usdt_m = list_usdtm  # ['ETHUSD_PERP', 'BTCUSD_PERP', 'BTCUSD_211231', 'ETHUSD_211231', 'BTCUSD_220325', 'ETHUSD_220325']
 
-        self.dataprovider = DataProviderFunding()
+        self.data_provider = DataProviderFunding()
 
         self.state = {
             'USDT-M': {'actions': {}},
             'COIN-M': {'actions': {}}
         }
 
-        #self.logger = Logger('strategy').create()
+        # self.logger = Logger('strategy').create()
 
     def decide(self) -> dict:
         pairs_usdtm, pairs_coinm = self.list_parser()
 
-        share_coinm = self.share_coinm.copy()
+        share_coinm = self.share_coin_m.copy()
         share_coinm['next'] = [max(self.get_current_next(pairs_coinm)), share_coinm['next']]
         share_coinm['current'] = [min(self.get_current_next(pairs_coinm)), share_coinm['current']]
 
@@ -42,7 +42,7 @@ class FundingAlpha(AbstractAlpha):
         state = self.setup(state, pairs_usdtm, pairs_coinm, self.time_exit, share_coinm)
         state = self.exit_position(state, self.time_exit)
 
-        return self.state
+        return state
 
     # Setup
     def setup(self, state, pairs_usdtm, pairs_coinm, time_exit, share_coinm):
@@ -57,14 +57,14 @@ class FundingAlpha(AbstractAlpha):
             else:
                 size = min(1, size)
                 if self.base_fr_earn - spread_apr > self.A:
-                    tte = self.dataprovider.get_tte(pair_usdtm[1])
+                    tte = self.data_provider.get_tte(pair_usdtm[1])
                     if tte <= self.save_time:
                         size = size
                     else:
                         size = 1
 
             if 0 <= size <= 1:
-                state['USDT-M']['actions'][asset] = ['setup', size * self.share_usdtm[asset], pair_usdtm]
+                state['USDT-M']['actions'][asset] = ['setup', size * self.share_usdt_m[asset], pair_usdtm]
 
         for pair_coinm in pairs_coinm:
             asset = 'BTC' if pair_coinm[0].startswith('BTC') else 'ETH'
@@ -73,7 +73,7 @@ class FundingAlpha(AbstractAlpha):
             size = min(1, size)
 
             if self.base_fr_earn - spread_apr > self.A:
-                tte = self.dataprovider.get_tte(pair_coinm[1])
+                tte = self.data_provider.get_tte(pair_coinm[1])
                 if tte <= self.save_time:
                     size = size
                 else:
@@ -91,20 +91,20 @@ class FundingAlpha(AbstractAlpha):
             for asset in assets:
                 pair = state[s]['actions'][asset][-1]
                 q = state[s]['actions'][asset][-1][-1]
-                tte = self.dataprovider.get_tte(q)
+                tte = self.data_provider.get_tte(q)
                 if tte <= time_exit:
                     state[s]['actions'][asset] = ['exit', 0, pair]
 
         return state
 
     def get_clam_size(self, k, ticker_swap, ticker_quart):  # k = 4.95
-        spread_pct, spread_apr = self.dataprovider.get_spread(ticker_swap, ticker_quart)
+        spread_pct, spread_apr = self.data_provider.get_spread(ticker_swap, ticker_quart)
         return (k / spread_apr), spread_pct, spread_apr
 
     def list_parser(self):
         pairs_usdt_m = []
         pairs_coin_m = []
-        for pair in itertools.product(self.list_usdtm, repeat=2):
+        for pair in itertools.product(self.list_usdt_m, repeat=2):
             name = pair[0].split('_')
             if name[0][-1] == 'T':
                 if len(name) == 1:
@@ -112,7 +112,7 @@ class FundingAlpha(AbstractAlpha):
                         if pair[1].split('_')[0] == name[0]:
                             pairs_usdt_m.append(pair)
 
-        for pair in itertools.product(self.list_coinm, repeat=2):
+        for pair in itertools.product(self.list_coin_m, repeat=2):
             name = pair[0].split('_')
             if name[1] == 'PERP':
                 if pair[1].split('_')[1] != 'PERP':
