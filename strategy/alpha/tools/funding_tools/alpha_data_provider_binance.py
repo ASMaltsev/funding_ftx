@@ -1,9 +1,8 @@
 from connectors import ConnectorRouter
 import datetime
-from strategy.alpha.tools.abstract_tools.abstract_data_provider import AbstractAlphaDataProvider
 
 
-class DataProviderFunding(AbstractAlphaDataProvider):
+class DataProviderFunding:
 
     def __init__(self):
         self.connector_usdtm = ConnectorRouter(exchange='Binance', section='USDT-M').init_connector()

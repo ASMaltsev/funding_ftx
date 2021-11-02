@@ -6,7 +6,7 @@ from connectors import ConnectorRouter
 import connectors.exceptions
 from strategy.logging import Logger
 from strategy.data_provider.abstract_provider.abstract_data_provider import AbstractExecutorDataProvider
-from strategy.data_provider.binanace_provider.binance_orderbook_ws import WebSocketStream
+from strategy.data_provider.binanace_provider.binance_data_ws import WebSocketStream
 
 logger = Logger('DataProviderExecutor').create()
 

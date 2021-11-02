@@ -1,47 +1,53 @@
 from strategy.alpha.tools.abstract_tools import AbstractAlpha
 from strategy.alpha.tools.funding_tools.alpha_data_provider_binance import DataProviderFunding
-# from strategy.others import Logger
+from strategy.hyperparams import ProviderHyperParamsStrategy
+from strategy.logging import Logger
 
 import itertools
+
+logger = Logger('strategy').create()
 
 
 class FundingAlpha(AbstractAlpha):
 
-    def __init__(self, list_usdtm, list_coinm, A, k, time_exit, save_time, share_usdtm, share_coinm, base_fr_earn):
+    def __init__(self):
+        provider_hyperparams = ProviderHyperParamsStrategy()
+        self.base_fr_earn = provider_hyperparams.get_base_fr_earn()
+        self.A = provider_hyperparams.get_A()
+        self.k = provider_hyperparams.get_k()
+        self.time_exit = provider_hyperparams.get_time_exit()
+        self.save_time = provider_hyperparams.get_save_time()
 
-        self.base_fr_earn = base_fr_earn
-        self.A = A
-        self.k = k
-        self.time_exit = time_exit
-        self.save_time = save_time
+        self.share_usdt_m = provider_hyperparams.get_share(section='USDT-M')
+        self.share_coin_m = provider_hyperparams.get_share(section='COIN-M')
 
-        self.share_usdt_m = share_usdtm
-        self.share_coin_m = share_coinm
+        self.list_usdt_m = provider_hyperparams.get_tickers(section='USDT-M')
+        self.list_coin_m = provider_hyperparams.get_tickers(section='COIN-M')
 
-        self.list_coin_m = list_coinm  # ['ETHUSDT', 'BTCUSDT', 'ETHUSDT_211231', 'BTCUSDT_211231']
-        self.list_usdt_m = list_usdtm  # ['ETHUSD_PERP', 'BTCUSD_PERP', 'BTCUSD_211231', 'ETHUSD_211231', 'BTCUSD_220325', 'ETHUSD_220325']
+        logger.info(msg='Create strategy with params:', extra=dict(base_fr_earn=self.base_fr_earn, A=self.A, k=self.k,
+                                                                   time_exit=self.time_exit, save_time=self.save_time,
+                                                                   share_usdt_m=self.share_usdt_m,
+                                                                   share_coin_m=self.share_coin_m,
+                                                                   list_usdt_m=self.list_usdt_m,
+                                                                   list_coin_m=self.list_coin_m))
 
         self.data_provider = DataProviderFunding()
-
         self.state = {
             'USDT-M': {'actions': {}},
             'COIN-M': {'actions': {}}
         }
 
-        # self.logger = Logger('strategy').create()
-
     def decide(self) -> dict:
-        pairs_usdtm, pairs_coinm = self.list_parser()
+        pairs_usdt_m, pairs_coin_m = self.list_parser()
 
-        share_coinm = self.share_coin_m.copy()
-        share_coinm['next'] = [max(self.get_current_next(pairs_coinm)), share_coinm['next']]
-        share_coinm['current'] = [min(self.get_current_next(pairs_coinm)), share_coinm['current']]
+        share_coin_m = self.share_coin_m.copy()
+        share_coin_m['next'] = [max(self.get_current_next(pairs_coin_m)), share_coin_m['next']]
+        share_coin_m['current'] = [min(self.get_current_next(pairs_coin_m)), share_coin_m['current']]
 
         state = self.state.copy()
 
-        state = self.setup(state, pairs_usdtm, pairs_coinm, self.time_exit, share_coinm)
+        state = self.setup(state, pairs_usdt_m, pairs_coin_m, self.time_exit, share_coin_m)
         state = self.exit_position(state, self.time_exit)
-
         return state
 
     # Setup

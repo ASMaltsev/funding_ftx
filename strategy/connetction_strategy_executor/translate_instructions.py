@@ -1,4 +1,4 @@
-from strategy.hyperparams.hyperparameters import hyperparams
+from strategy.hyperparams import AccountHyperParams
 from strategy.data_provider.binanace_provider.binance_data_provider import BinanceDataProvider
 from strategy.logging import Logger
 
@@ -11,6 +11,7 @@ class TranslateInstructions:
     def __init__(self, data_provider_usdt_m: BinanceDataProvider, data_provider_coin_m: BinanceDataProvider):
         self.data_provider_usdt_m = data_provider_usdt_m
         self.data_provider_coin_m = data_provider_coin_m
+        self.account_hyperparams = AccountHyperParams()
 
     def parse(self, instructions: dict):
         instructions_usdt_m = instructions.get('USDT-M')
@@ -43,10 +44,10 @@ class TranslateInstructions:
 
     def _parse_setup(self, part: float, perp_ticker: str, quart_ticker: str, section: str, coin: str):
         if section == 'USDT-M':
-            total_amount = self._size_usdt_m(part, quart_ticker, coin)
+            total_amount = self._size_usdt_m(part, quart_ticker)
         elif section == 'COIN-M':
             ticker = coin.split('_')[0]
-            total_amount = self._size_coin_m(part, quart_ticker, ticker)
+            total_amount = self._size_coin_m(part, ticker, perp_ticker)
         else:
             raise NotImplementedError
 
@@ -67,8 +68,8 @@ class TranslateInstructions:
                 'market_side': 'buy', 'total_amount': total_amount, 'reduce_only': False, 'section': section}
         """
 
-    def _size_usdt_m(self, part: float, asset: str, quart_ticker: str) -> float:
-        leverage = hyperparams['USDT-M'][asset]['leverage_quart']
+    def _size_usdt_m(self, part: float, quart_ticker: str) -> float:
+        leverage = self.account_hyperparams.get_max_leverage(section='USDT-M')
         total_balance = self.data_provider_usdt_m.get_account_info()['totalWalletBalance']
         precision = len(str(self.data_provider_usdt_m.min_size_for_market_order(quart_ticker)).split('.'))
         price = self.data_provider_usdt_m.get_price(quart_ticker)
@@ -79,12 +80,13 @@ class TranslateInstructions:
         return result
 
     def _size_coin_m(self, part: float, asset: str, perp_ticker: str) -> float:
-        leverage = hyperparams['COIN-M'][asset]['leverage_quart_current']
+        leverage = self.account_hyperparams.get_max_leverage(section='COIN-M')
         total_balance = 0
         account_info = self.data_provider_coin_m.get_account_info()
         for info_ticker in account_info['tickers']:
             if info_ticker['ticker'] == asset:
                 total_balance = info_ticker['walletBalance']
+
         price_perp = self.data_provider_coin_m.get_price(ticker=perp_ticker)
         contract_price = 0
         for symbols_info in self.data_provider_coin_m.get_exchange_info()['symbols']:

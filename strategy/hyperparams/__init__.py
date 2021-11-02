@@ -1,4 +1,3 @@
-from strategy.hyperparams.provider_hyperparams import ProviderHyperParams
-from strategy.hyperparams.provider_hyperparams import TypeActive
+from strategy.hyperparams.provider_hyperparams import ProviderHyperParamsStrategy, AccountHyperParams
 
-__all__ = ['ProviderHyperParams', 'TypeActive']
+__all__ = ['ProviderHyperParamsStrategy', 'AccountHyperParams']
