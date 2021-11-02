@@ -23,29 +23,29 @@ class FundingAlpha(AbstractAlpha):
 
         self.dataprovider = DataProviderFunding()
 
-        self.logger = Logger('strategy').create()
 
-
-    def decide(self) -> dict:
-
-        state = {
+        self.state = {
                  'USDT-M': {'actions': {}},
                  'COIN-M': {'actions': {}}
                  }
 
+        self.logger = Logger('strategy').create()
+
+
+    def decide(self) -> dict:
         pairs_usdtm, pairs_coinm = self.list_parser()
-        self.share_coinm['next'] = [max(self.get_current_next(pairs_coinm)), self.share_coinm['next']]
-        self.share_coinm['current'] = [min(self.get_current_next(pairs_coinm)), self.share_coinm['current']]
 
+        share_coinm = self.share_coinm.copy()
+        share_coinm['next'] = [max(self.get_current_next(pairs_coinm)), share_coinm['next']]
+        share_coinm['current'] = [min(self.get_current_next(pairs_coinm)), share_coinm['current']]
 
-        state = self.setup(state, pairs_usdtm, pairs_coinm, self.time_exit)
-        state = self.exit_position(state, self.time_exit)
-
+        state = self.setup(self.state, pairs_usdtm, pairs_coinm, self.time_exit, share_coinm)
+        state = self.exit_position(self.state, self.time_exit)
 
         return state
 
     # Setup
-    def setup(self, state, pairs_usdtm, pairs_coinm, time_exit):
+    def setup(self, state, pairs_usdtm, pairs_coinm, time_exit, share_coinm):
 
         for pair_usdtm in pairs_usdtm:
             asset = 'BTC' if pair_usdtm[0].startswith('BTC') else 'ETH'
@@ -63,11 +63,12 @@ class FundingAlpha(AbstractAlpha):
                     else:
                         size = 1
 
-            state['USDT-M']['actions'][asset] = ['setup', size*self.share_usdtm[asset], pair_usdtm]
+            if 0 <= size <= 1:
+                state['USDT-M']['actions'][asset] = ['setup', size*self.share_usdtm[asset], pair_usdtm]
 
         for pair_coinm in pairs_coinm:
             asset = 'BTC' if pair_coinm[0].startswith('BTC') else 'ETH'
-            quart = 'current' if int(pair_coinm[1].split('_')[1]) == self.share_coinm['current'][0] else 'next'
+            quart = 'current' if int(pair_coinm[1].split('_')[1]) == share_coinm['current'][0] else 'next'
             size, spread_pct, spread_apr = self.get_clam_size(self.k, pair_coinm[0], pair_coinm[1])
             size = min(1, size)
 
@@ -78,7 +79,8 @@ class FundingAlpha(AbstractAlpha):
                 else:
                     size = 1
 
-            state['COIN-M']['actions'][f'{asset}_{quart}'] = ['setup', size*self.share_coinm[quart][1], pair_coinm]
+            if 0 <= size <= 1:
+                state['COIN-M']['actions'][f'{asset}_{quart}'] = ['setup', size*share_coinm[quart][1], pair_coinm]
 
         return state
 

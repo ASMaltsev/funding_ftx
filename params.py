@@ -2,22 +2,18 @@
 
 
 
+#kkk
+api_key = 'CuUqMsENuKX4RMXNOeAUSChU9nYD3nNWnEYYd7x2UFFznRTD77wCmXhj80dD5TjE'
+secret_key = 'bPszoss42LPnlCEaxxRLjMrJNJ1bDQdWnpc0Q3fGRAt8Q6JIaEOgLdHMP3RumtxX'
 
 
+client_name = 'kkk'
 
-#ShSh1
-api_key = 'cgi94unJMvafiMFPwcvy115hDxSIqVjecPtpUTFEno92ldJlG57x2vBVPzsWzbG9'
-secret_key = 'C6PiycF8lSHUuULY4BnvbpPPZinxs9vaFmlHGLazStYbW5qSTM96OsahQNR6dnR0'
-
-
-
-client_name = 'shsh1'
-
-ticker_swap = 'BTCUSD_PERP'
-ticker_futures = 'BTCUSD_220325'
+ticker_swap = 'ETHUSD_PERP'
+ticker_futures = 'ETHUSD_220325'
 
 swap_side = 'sell'
 futures_side = 'buy'
 reduce_only = False
-total_amount = 10000
+total_amount = 4400
 section = 'COIN-M'
