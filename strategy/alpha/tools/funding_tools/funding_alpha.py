@@ -5,6 +5,7 @@ from strategy.others import Logger
 import time
 import itertools
 
+
 class FundingAlpha(AbstractAlpha):
 
     def __init__(self, list_usdtm, list_coinm, A, k, time_exit, save_time, share_usdtm, share_coinm, base_fr_earn):
@@ -18,19 +19,17 @@ class FundingAlpha(AbstractAlpha):
         self.share_usdtm = share_usdtm
         self.share_coinm = share_coinm
 
-        self.list_coinm = list_coinm # ['ETHUSDT', 'BTCUSDT', 'ETHUSDT_211231', 'BTCUSDT_211231']
-        self.list_usdtm = list_usdtm # ['ETHUSD_PERP', 'BTCUSD_PERP', 'BTCUSD_211231', 'ETHUSD_211231', 'BTCUSD_220325', 'ETHUSD_220325']
+        self.list_coinm = list_coinm  # ['ETHUSDT', 'BTCUSDT', 'ETHUSDT_211231', 'BTCUSDT_211231']
+        self.list_usdtm = list_usdtm  # ['ETHUSD_PERP', 'BTCUSD_PERP', 'BTCUSD_211231', 'ETHUSD_211231', 'BTCUSD_220325', 'ETHUSD_220325']
 
         self.dataprovider = DataProviderFunding()
 
-
         self.state = {
-                 'USDT-M': {'actions': {}},
-                 'COIN-M': {'actions': {}}
-                 }
+            'USDT-M': {'actions': {}},
+            'COIN-M': {'actions': {}}
+        }
 
         self.logger = Logger('strategy').create()
-
 
     def decide(self) -> dict:
         pairs_usdtm, pairs_coinm = self.list_parser()
@@ -64,7 +63,7 @@ class FundingAlpha(AbstractAlpha):
                         size = 1
 
             if 0 <= size <= 1:
-                state['USDT-M']['actions'][asset] = ['setup', size*self.share_usdtm[asset], pair_usdtm]
+                state['USDT-M']['actions'][asset] = ['setup', size * self.share_usdtm[asset], pair_usdtm]
 
         for pair_coinm in pairs_coinm:
             asset = 'BTC' if pair_coinm[0].startswith('BTC') else 'ETH'
@@ -80,10 +79,9 @@ class FundingAlpha(AbstractAlpha):
                     size = 1
 
             if 0 <= size <= 1:
-                state['COIN-M']['actions'][f'{asset}_{quart}'] = ['setup', size*share_coinm[quart][1], pair_coinm]
+                state['COIN-M']['actions'][f'{asset}_{quart}'] = ['setup', size * share_coinm[quart][1], pair_coinm]
 
         return state
-
 
     def exit_position(self, state, time_exit):
         sections = ['USDT-M', 'COIN-M']
@@ -98,11 +96,9 @@ class FundingAlpha(AbstractAlpha):
 
         return state
 
-
-    def get_clam_size(self, k, ticker_swap, ticker_quart): # k = 4.95
+    def get_clam_size(self, k, ticker_swap, ticker_quart):  # k = 4.95
         spread_pct, spread_apr = self.dataprovider.get_spread(ticker_swap, ticker_quart)
-        return (k/spread_apr), spread_pct, spread_apr
-
+        return (k / spread_apr), spread_pct, spread_apr
 
     def list_parser(self):
         pairs_usdtm = []
@@ -123,7 +119,6 @@ class FundingAlpha(AbstractAlpha):
                         pairs_coinm.append(pair)
 
         return pairs_usdtm, pairs_coinm
-
 
     def get_current_next(self, pairs_coinm):
         quarts = list(set([int(q[1].split('_')[1]) for q in pairs_coinm]))

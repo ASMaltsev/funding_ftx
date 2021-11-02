@@ -1,6 +1,6 @@
 from strategy.hyperparams.hyperparameters import hyperparams
-from strategy.executor.tools.funding_tools.binance_data_provider import BinanceDataProvider
-from strategy.others import Logger
+from strategy.data_provider.binanace_provider.binance_data_provider import BinanceDataProvider
+from strategy.logging import Logger
 
 my_logger = Logger('TranslateInstructions')
 logger = my_logger.create()
@@ -68,7 +68,7 @@ class TranslateInstructions:
         """
 
     def _size_usdt_m(self, part: float, asset: str, quart_ticker: str) -> float:
-        leverage = hyperparams_account['USDT-M'][asset]['leverage_quart']
+        leverage = hyperparams['USDT-M'][asset]['leverage_quart']
         total_balance = self.data_provider_usdt_m.get_account_info()['totalWalletBalance']
         precision = len(str(self.data_provider_usdt_m.min_size_for_market_order(quart_ticker)).split('.'))
         price = self.data_provider_usdt_m.get_price(quart_ticker)
@@ -79,7 +79,7 @@ class TranslateInstructions:
         return result
 
     def _size_coin_m(self, part: float, asset: str, perp_ticker: str) -> float:
-        leverage = hyperparams_account['COIN-M'][asset]['leverage_quart_current']
+        leverage = hyperparams['COIN-M'][asset]['leverage_quart_current']
         total_balance = 0
         account_info = self.data_provider_coin_m.get_account_info()
         for info_ticker in account_info['tickers']:
