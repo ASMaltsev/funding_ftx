@@ -1,13 +1,13 @@
 from strategy.alpha.tools.abstract_tools import AbstractAlpha
 from strategy.alpha.tools.funding_tools.alpha_data_provider_binance import DataProviderFunding
-from strategy.others import Logger
+#from strategy.others import Logger
 
 import itertools
 
 
 class FundingAlpha(AbstractAlpha):
 
-    def __init__(self, list_usdt_m, list_coin_m, A, k, time_exit, save_time, share_usdt_m, share_coin_m, base_fr_earn):
+    def __init__(self, list_usdtm, list_coinm, A, k, time_exit, save_time, share_usdtm, share_coinm, base_fr_earn):
 
         self.base_fr_earn = base_fr_earn
         self.A = A
@@ -28,7 +28,7 @@ class FundingAlpha(AbstractAlpha):
             'COIN-M': {'actions': {}}
         }
 
-        self.logger = Logger('strategy').create()
+        #self.logger = Logger('strategy').create()
 
     def decide(self) -> dict:
         pairs_usdtm, pairs_coinm = self.list_parser()
@@ -37,10 +37,12 @@ class FundingAlpha(AbstractAlpha):
         share_coinm['next'] = [max(self.get_current_next(pairs_coinm)), share_coinm['next']]
         share_coinm['current'] = [min(self.get_current_next(pairs_coinm)), share_coinm['current']]
 
-        state = self.setup(self.state, pairs_usdtm, pairs_coinm, self.time_exit, share_coinm)
-        state = self.exit_position(self.state, self.time_exit)
+        state = self.state.copy()
 
-        return state
+        state = self.setup(state, pairs_usdtm, pairs_coinm, self.time_exit, share_coinm)
+        state = self.exit_position(state, self.time_exit)
+
+        return self.state
 
     # Setup
     def setup(self, state, pairs_usdtm, pairs_coinm, time_exit, share_coinm):
