@@ -51,42 +51,44 @@ class FundingAlpha(AbstractAlpha):
         return state
 
     # Setup
-    def setup(self, state, pairs_usdtm, pairs_coinm, time_exit, share_coinm):
+    def setup(self, state, pairs_usdt_m, pairs_coin_m, time_exit, share_coinm):
 
-        for pair_usdtm in pairs_usdtm:
-            asset = 'BTC' if pair_usdtm[0].startswith('BTC') else 'ETH'
-            size, spread_pct, spread_apr = self.get_clam_size(self.k, pair_usdtm[0], pair_usdtm[1])
-
+        for pair_usdt_m in pairs_usdt_m:
+            asset = 'BTC' if pair_usdt_m[0].startswith('BTC') else 'ETH'
+            size, spread_pct, spread_apr = self.get_clam_size(self.k, pair_usdt_m[0], pair_usdt_m[1])
+            logger.info(msg='Spread:', extra=dict(tickers=pair_usdt_m, spread=spread_apr))
             if spread_apr < 0:
                 size = 1
 
             else:
                 size = min(1, size)
                 if self.base_fr_earn - spread_apr > self.A:
-                    tte = self.data_provider.get_tte(pair_usdtm[1])
+                    tte = self.data_provider.get_tte(pair_usdt_m[1])
                     if tte <= self.save_time:
                         size = size
                     else:
                         size = 1
 
             if 0 <= size <= 1:
-                state['USDT-M']['actions'][asset] = ['setup', size * self.share_usdt_m[asset], pair_usdtm]
+                state['USDT-M']['actions'][asset] = ['setup', size * self.share_usdt_m[asset], pair_usdt_m]
 
-        for pair_coinm in pairs_coinm:
-            asset = 'BTC' if pair_coinm[0].startswith('BTC') else 'ETH'
-            quart = 'current' if int(pair_coinm[1].split('_')[1]) == share_coinm['current'][0] else 'next'
-            size, spread_pct, spread_apr = self.get_clam_size(self.k, pair_coinm[0], pair_coinm[1])
+        for pair_coin_m in pairs_coin_m:
+            asset = 'BTC' if pair_coin_m[0].startswith('BTC') else 'ETH'
+            quart = 'current' if int(pair_coin_m[1].split('_')[1]) == share_coinm['current'][0] else 'next'
+            size, spread_pct, spread_apr = self.get_clam_size(self.k, pair_coin_m[0], pair_coin_m[1])
+            logger.info(msg='Spread:', extra=dict(tickers=pair_coin_m, spread=spread_apr))
+
             size = min(1, size)
 
             if self.base_fr_earn - spread_apr > self.A:
-                tte = self.data_provider.get_tte(pair_coinm[1])
+                tte = self.data_provider.get_tte(pair_coin_m[1])
                 if tte <= self.save_time:
                     size = size
                 else:
                     size = 1
 
             if 0 <= size <= 1:
-                state['COIN-M']['actions'][f'{asset}_{quart}'] = ['setup', size * share_coinm[quart][1], pair_coinm]
+                state['COIN-M']['actions'][f'{asset}_{quart}'] = ['setup', size * share_coinm[quart][1], pair_coin_m]
 
         return state
 
