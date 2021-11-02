@@ -2,13 +2,12 @@ from strategy.alpha.tools.abstract_tools import AbstractAlpha
 from strategy.alpha.tools.funding_tools.alpha_data_provider_binance import DataProviderFunding
 from strategy.others import Logger
 
-import time
 import itertools
 
 
 class FundingAlpha(AbstractAlpha):
 
-    def __init__(self, list_usdtm, list_coinm, A, k, time_exit, save_time, share_usdtm, share_coinm, base_fr_earn):
+    def __init__(self, list_usdt_m, list_coin_m, A, k, time_exit, save_time, share_usdt_m, share_coin_m, base_fr_earn):
 
         self.base_fr_earn = base_fr_earn
         self.A = A
@@ -101,25 +100,25 @@ class FundingAlpha(AbstractAlpha):
         return (k / spread_apr), spread_pct, spread_apr
 
     def list_parser(self):
-        pairs_usdtm = []
-        pairs_coinm = []
+        pairs_usdt_m = []
+        pairs_coin_m = []
         for pair in itertools.product(self.list_usdtm, repeat=2):
             name = pair[0].split('_')
             if name[0][-1] == 'T':
                 if len(name) == 1:
                     if len(pair[1].split('_')) > 1:
                         if pair[1].split('_')[0] == name[0]:
-                            pairs_usdtm.append(pair)
+                            pairs_usdt_m.append(pair)
 
         for pair in itertools.product(self.list_coinm, repeat=2):
             name = pair[0].split('_')
             if name[1] == 'PERP':
                 if pair[1].split('_')[1] != 'PERP':
                     if name[0] == pair[1].split('_')[0]:
-                        pairs_coinm.append(pair)
+                        pairs_coin_m.append(pair)
+        return pairs_usdt_m, pairs_coin_m
 
-        return pairs_usdtm, pairs_coinm
-
-    def get_current_next(self, pairs_coinm):
-        quarts = list(set([int(q[1].split('_')[1]) for q in pairs_coinm]))
+    @staticmethod
+    def get_current_next(pairs_coin_m):
+        quarts = list(set([int(q[1].split('_')[1]) for q in pairs_coin_m]))
         return quarts
