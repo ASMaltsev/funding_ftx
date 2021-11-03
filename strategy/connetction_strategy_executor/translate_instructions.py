@@ -35,8 +35,7 @@ class TranslateInstructions:
             perp_ticker, quart_ticker = coin_actions[2]
             if work == 'exit':
                 executor_instructions.append(self._parse_exit(part=part, perp_ticker=perp_ticker,
-                                                              quart_ticker=quart_ticker, section=section,
-                                                              coin=coin))
+                                                              quart_ticker=quart_ticker, section=section))
             elif work == 'setup':
                 executor_instructions.append(self._parse_setup(part=part, perp_ticker=perp_ticker,
                                                                quart_ticker=quart_ticker, section=section,
@@ -55,14 +54,13 @@ class TranslateInstructions:
         return {'market_ticker': quart_ticker, 'limit_ticker': perp_ticker, 'limit_side': 'sell',
                 'market_side': 'buy', 'total_amount': total_amount, 'reduce_only': False, 'section': section}
 
-    def _parse_exit(self, part: float, perp_ticker: str, quart_ticker: str, section: str, coin: str):
-        ## Exit shows what proportion of assets needs to be closed
-        ## Ex: If Exit = 1. It's mean that we have to close all
+    def _parse_exit(self, part: float, perp_ticker: str, quart_ticker: str, section: str):
+        # Exit shows what proportion of assets needs to be closed
+        # Ex: If Exit = 1. It's mean that we have to close all
         total_amount = self._size_exit(part, quart_ticker, section)
 
         return {'market_ticker': quart_ticker, 'limit_ticker': perp_ticker, 'limit_side': 'buy',
                 'market_side': 'sell', 'total_amount': total_amount, 'reduce_only': True, 'section': section}
-
 
     def _size_exit(self, part: float, quart_ticker: str, section) -> float:
         if section == 'USDT-M':
@@ -70,12 +68,11 @@ class TranslateInstructions:
             result = float(amt * part)
         elif section == 'COIN-M':
             amt = self.data_provider_coin_m.get_amount_positions(quart_ticker)
-            result = int(amt*part)
+            result = int(amt * part)
         else:
             raise NotImplementedError
 
         return result
-
 
     def _size_usdt_m(self, part: float, quart_ticker: str) -> float:
         leverage = self.account_hyperparams.get_max_leverage(section='USDT-M')
