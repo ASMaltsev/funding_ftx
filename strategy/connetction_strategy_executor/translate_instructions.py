@@ -34,8 +34,9 @@ class TranslateInstructions:
             part = coin_actions[1]
             perp_ticker, quart_ticker = coin_actions[2]
             if work == 'exit':
-                self._parse_exit(part=part, perp_ticker=perp_ticker, quart_ticker=quart_ticker, section=section,
-                                 coin=coin)
+                executor_instructions.append(self._parse_exit(part=part, perp_ticker=perp_ticker,
+                                                              quart_ticker=quart_ticker, section=section,
+                                                              coin=coin))
             elif work == 'setup':
                 executor_instructions.append(self._parse_setup(part=part, perp_ticker=perp_ticker,
                                                                quart_ticker=quart_ticker, section=section,
@@ -55,30 +56,25 @@ class TranslateInstructions:
                 'market_side': 'buy', 'total_amount': total_amount, 'reduce_only': False, 'section': section}
 
     def _parse_exit(self, part: float, perp_ticker: str, quart_ticker: str, section: str, coin: str):
-        ## The EXIT shows the percentage of the portfolio that should remain.
-        ## Ex: If Exit = 0. It's mean that we have to sell all
+        ## Exit shows what proportion of assets needs to be closed
+        ## Ex: If Exit = 1. It's mean that we have to close all
+        total_amount = self._size_exit(part, quart_ticker, section)
+
+        return {'market_ticker': quart_ticker, 'limit_ticker': perp_ticker, 'limit_side': 'buy',
+                'market_side': 'sell', 'total_amount': total_amount, 'reduce_only': True, 'section': section}
+
+
+    def _size_exit(self, part: float, quart_ticker: str, section) -> float:
         if section == 'USDT-M':
-            pass
-
-
-
-
-        pass
-        """
-        if section == 'USDT-M':
-            total_amount = self._size_usdt_m(part, quart_ticker, coin)
+            amt = self.data_provider_usdt_m.get_amount_positions(quart_ticker)
+            result = float(amt * part)
         elif section == 'COIN-M':
-            ticker = coin.split('_')[0]
-            total_amount = self._size_coin_m(part, quart_ticker, ticker)
+            amt = self.data_provider_coin_m.get_amount_positions(quart_ticker)
+            result = int(amt*part)
         else:
             raise NotImplementedError
-        return {'market_ticker': quart_ticker, 'limit_ticker': perp_ticker, 'limit_side': 'sell',
-                'market_side': 'buy', 'total_amount': total_amount, 'reduce_only': False, 'section': section}
 
-
-        """
-
-    def _size_exit_usdt_m(self, part: float, quart_ticker: str) -> float:
+        return result
 
 
     def _size_usdt_m(self, part: float, quart_ticker: str) -> float:
