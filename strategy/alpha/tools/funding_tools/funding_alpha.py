@@ -108,7 +108,7 @@ class FundingAlpha(AbstractAlpha):
                 q = state[s]['actions'][asset][-1][-1]
                 tte = data_provider.get_tte(q)
                 if tte <= time_exit:
-                    state[s]['actions'][asset] = ['exit', 0, pair]
+                    state[s]['actions'][asset] = ['exit', 1, pair]
 
         return state
 

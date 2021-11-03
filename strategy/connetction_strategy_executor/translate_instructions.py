@@ -55,6 +55,14 @@ class TranslateInstructions:
                 'market_side': 'buy', 'total_amount': total_amount, 'reduce_only': False, 'section': section}
 
     def _parse_exit(self, part: float, perp_ticker: str, quart_ticker: str, section: str, coin: str):
+        ## The EXIT shows the percentage of the portfolio that should remain.
+        ## Ex: If Exit = 0. It's mean that we have to sell all
+        if section == 'USDT-M':
+            pass
+
+
+
+
         pass
         """
         if section == 'USDT-M':
@@ -66,7 +74,12 @@ class TranslateInstructions:
             raise NotImplementedError
         return {'market_ticker': quart_ticker, 'limit_ticker': perp_ticker, 'limit_side': 'sell',
                 'market_side': 'buy', 'total_amount': total_amount, 'reduce_only': False, 'section': section}
+
+
         """
+
+    def _size_exit_usdt_m(self, part: float, quart_ticker: str) -> float:
+
 
     def _size_usdt_m(self, part: float, quart_ticker: str) -> float:
         leverage = self.account_hyperparams.get_max_leverage(section='USDT-M')
