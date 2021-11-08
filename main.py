@@ -1,9 +1,13 @@
 from strategy.alpha import FundingAlpha
 from strategy.executor import DadExecutor
-from strategy.executor.binance_executor.executor import BinanceExecutor
+from strategy.data_provider.binanace_provider.binance_data_provider import BinanceDataProvider
+from strategy.risk_control.rebalancer import Rebalancer
 
-api_key = 'IdPorsZNdskqCUNbO5aN0w6TY67Kfl0syZjHDV3ZP9tOMuM6k3KzovNizMKmBpix'
-secret_key = '7qE1lC0fVpNF7i9Lb08odC1HaV6m2LILmzy2SSEnAXTwqOVaJhqA8cVz1tzPzP0A'
+api_key = ''
+secret_key = ''
+
+data_provider_usdt_m = BinanceDataProvider(api_key=api_key, secret_key=secret_key, section='USDT-M')
+data_provider_coin_m = BinanceDataProvider(api_key=api_key, secret_key=secret_key, section='COIN-M')
 
 instructions = FundingAlpha().decide()
 DadExecutor(api_key=api_key, secret_key=secret_key).execute(instructions)

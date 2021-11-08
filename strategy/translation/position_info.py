@@ -36,11 +36,11 @@ class GeneratePosition:
         self.open_position['market_ticker'] = market_ticker
         self.open_position['limit_ticker'] = limit_ticker
         self.open_position['total_amount'] = total_amount
-        return self.open_position
+        return self.open_position.copy()
 
     def get_close_position_instruction(self, section, market_ticker, limit_ticker, total_amount):
         self.close_position['section'] = section
         self.close_position['market_ticker'] = market_ticker
         self.close_position['limit_ticker'] = limit_ticker
         self.close_position['total_amount'] = total_amount
-        return self.close_position
+        return self.close_position.copy()
