@@ -36,9 +36,9 @@ class Rebalancer:
                                                                                     kind='current')
             next_ticker = self.provider_hyperparams_strategy.get_ticker_by_asset(section=section, asset=asset,
                                                                                  kind='next')
-            leverage_df.loc[asset, 'perp'] = self._leverage_coin_m(perp_ticker)
-            leverage_df.loc[asset, 'current'] = self._leverage_coin_m(current_ticker)
-            leverage_df.loc[asset, 'next'] = self._leverage_coin_m(next_ticker)
+            leverage_df.loc[asset, 'perp'] = self._leverage_coin_m(perp_ticker, total_balance[asset])
+            leverage_df.loc[asset, 'current'] = self._leverage_coin_m(current_ticker, total_balance[asset])
+            leverage_df.loc[asset, 'next'] = self._leverage_coin_m(next_ticker, total_balance[asset])
         leverage_df = leverage_df.astype(float)
 
         leverage_df['quart'] = leverage_df['current'] + leverage_df['next']
@@ -59,11 +59,12 @@ class Rebalancer:
                                                                         twb=total_balance[asset], ticker_1=perp_ticker,
                                                                         ticker_2=current_ticker, ticker_3=next_ticker),
                                          0))
+        logger.info(msg='COIN-M leverages info:', extra=dict(leverage_df=leverage_df, result=result))
         return result
 
-    def _leverage_coin_m(self, ticker):
+    def _leverage_coin_m(self, ticker, twb):
         return self.data_provider_coin_m.get_amount_positions(ticker) * self.data_provider_coin_m.get_contract_size(
-            ticker) / self.data_provider_coin_m.get_price(ticker)
+            ticker) / (self.data_provider_coin_m.get_price(ticker) * twb)
 
     def _get_amount_ticker_coin_m(self, leverage, twb, ticker_1, ticker_2, ticker_3):
         price = max(self.data_provider_coin_m.get_price(ticker_1), self.data_provider_coin_m.get_price(ticker_2),
@@ -106,6 +107,7 @@ class Rebalancer:
 
             result[asset] = max(0, self._get_amount_ticker_usdt_m(amount, total_wallet_balance, ticker_perp,
                                                                   ticker_quart))
+        logger.info(msg='USDT-M leverages info:', extra=dict(leverage_df=leverage_df, result=result))
         return result
 
     def _leverage_usdt_m(self, ticker, twb):
