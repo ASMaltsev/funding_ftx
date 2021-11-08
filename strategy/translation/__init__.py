@@ -1,4 +1,4 @@
-from strategy.translation.translate_strategy import TranslateInstructions
+from strategy.translation.translate_strategy import TranslateStrategyInstructions
 from strategy.translation.position_info import GeneratePosition
 
-__all__ = ['TranslateInstructions', 'GeneratePosition']
+__all__ = ['TranslateStrategyInstructions', 'GeneratePosition']

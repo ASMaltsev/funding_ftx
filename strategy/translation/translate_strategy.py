@@ -7,7 +7,7 @@ my_logger = Logger('TranslateInstructions')
 logger = my_logger.create()
 
 
-class TranslateInstructions:
+class TranslateStrategyInstructions:
 
     def __init__(self, data_provider_usdt_m: BinanceDataProvider, data_provider_coin_m: BinanceDataProvider):
         self.data_provider_usdt_m = data_provider_usdt_m
