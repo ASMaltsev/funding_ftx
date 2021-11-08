@@ -1,6 +1,7 @@
 from strategy.hyperparams import AccountHyperParams
 from strategy.data_provider.binanace_provider.binance_data_provider import BinanceDataProvider
 from strategy.logging import Logger
+from strategy.translation.position_info import GeneratePosition
 
 my_logger = Logger('TranslateInstructions')
 logger = my_logger.create()
@@ -12,6 +13,7 @@ class TranslateInstructions:
         self.data_provider_usdt_m = data_provider_usdt_m
         self.data_provider_coin_m = data_provider_coin_m
         self.account_hyperparams = AccountHyperParams()
+        self.generate_position = GeneratePosition()
 
     def parse(self, instructions: dict):
         instructions_usdt_m = instructions.get('USDT-M')
@@ -51,16 +53,20 @@ class TranslateInstructions:
         else:
             raise NotImplementedError
 
-        return {'market_ticker': quart_ticker, 'limit_ticker': perp_ticker, 'limit_side': 'sell',
-                'market_side': 'buy', 'total_amount': total_amount, 'reduce_only': False, 'section': section}
+        self.generate_position.generate(section=section, market_ticker=quart_ticker, limit_ticker=perp_ticker,
+                                        total_amount=total_amount)
+
+        return self.generate_position.get_open_position_instruction()
 
     def _parse_exit(self, part: float, perp_ticker: str, quart_ticker: str, section: str):
         # Exit shows what proportion of assets needs to be closed
         # Ex: If Exit = 1. It's mean that we have to close all
         total_amount = self._size_exit(part, quart_ticker, section)
 
-        return {'market_ticker': quart_ticker, 'limit_ticker': perp_ticker, 'limit_side': 'buy',
-                'market_side': 'sell', 'total_amount': total_amount, 'reduce_only': True, 'section': section}
+        self.generate_position.generate(section=section, market_ticker=quart_ticker, limit_ticker=perp_ticker,
+                                        total_amount=total_amount)
+
+        return self.generate_position.close_position()
 
     def _size_exit(self, part: float, quart_ticker: str, section) -> float:
         if section == 'USDT-M':
