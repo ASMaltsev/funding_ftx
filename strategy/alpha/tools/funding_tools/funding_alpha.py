@@ -21,8 +21,8 @@ class FundingAlpha(AbstractAlpha):
         self.share_usdt_m = provider_hyperparams.get_share(section='USDT-M')
         self.share_coin_m = provider_hyperparams.get_share(section='COIN-M')
 
-        self.list_usdt_m = provider_hyperparams.get_tickers(section='USDT-M')
-        self.list_coin_m = provider_hyperparams.get_tickers(section='COIN-M')
+        self.list_usdt_m = provider_hyperparams.get_all_tickers(section='USDT-M')
+        self.list_coin_m = provider_hyperparams.get_all_tickers(section='COIN-M')
 
         logger.info(msg='Create strategy with params:', extra=dict(base_fr_earn=self.base_fr_earn, A=self.A, k=self.k,
                                                                    time_exit=self.time_exit, save_time=self.save_time,

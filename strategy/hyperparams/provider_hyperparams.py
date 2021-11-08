@@ -28,7 +28,7 @@ class ProviderHyperParamsStrategy:
         return strategy_hyperparams[section]['share']
 
     @staticmethod
-    def get_tickers(section):
+    def get_all_tickers(section):
         all_tickers = []
         assets_info = strategy_hyperparams[section]['assets']
         for asset, tickers in assets_info.items():
