@@ -43,6 +43,26 @@ class ProviderHyperParamsStrategy:
 
         return all_tickers
 
+    @staticmethod
+    def get_assets(section):
+        return list(strategy_hyperparams[section]['assets'].keys())
+
+    @staticmethod
+    def get_list_tickers(section: str, kind: str):
+        """
+        @param section: USDT-M or COIN-M
+        @param kind: perp, next, current, quart
+        @return: list of tickers
+        """
+        arr = []
+        for asset, tickers in strategy_hyperparams[section]['assets'].items():
+            arr.append(tickers[kind])
+        return arr
+
+    @staticmethod
+    def get_ticker_by_asset(section: str, asset: str, kind: str):
+        return strategy_hyperparams[section]['assets'][asset][kind]
+
 
 class AccountHyperParams:
 

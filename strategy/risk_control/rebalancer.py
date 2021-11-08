@@ -1,5 +1,6 @@
+import pandas as pd
 from strategy.data_provider.binanace_provider.binance_data_provider import BinanceDataProvider
-from strategy.hyperparams import AccountHyperParams
+from strategy.hyperparams import AccountHyperParams, ProviderHyperParamsStrategy
 from strategy.logging import Logger
 
 logger = Logger('Rebalancer').create()
@@ -9,105 +10,63 @@ class Rebalancer:
     def __init__(self, data_provider_usdt_m: BinanceDataProvider, data_provider_coin_m: BinanceDataProvider):
         self.data_provider_usdt_m = data_provider_usdt_m
         self.data_provider_coin_m = data_provider_coin_m
-        self.provider_hyperparams = AccountHyperParams()
+        self.provider_hyperparams_account = AccountHyperParams()
+        self.provider_hyperparams_strategy = ProviderHyperParamsStrategy()
+        self.safety_coef = 0.05
 
     def analyze_account(self) -> dict:
-        coin_m_close = self._analyze_account_coin_m()
+        # coin_m_close = self._analyze_account_coin_m()
         usdt_m_close = self._analyze_account_usdt_m()
-        return {'USDT-M': usdt_m_close, 'COIN-M': coin_m_close}
+        return {'USDT-M': usdt_m_close, 'COIN-M': 0}
 
     def _analyze_account_usdt_m(self):
         account_info = self.data_provider_usdt_m.get_account_info()
-        positions = account_info['positions']
         total_wallet_balance = float(account_info['totalWalletBalance'])
         available_balance = float(account_info['availableBalance'])
         section = 'USDT-M'
-        assets = ['BTC', 'ETH']
-        if available_balance / total_wallet_balance > 1:
-            return {asset: 0 for asset in assets}
+        account_max_leverage = self.provider_hyperparams_account.get_max_leverage(section=section)
+        assets = self.provider_hyperparams_strategy.get_assets(section)
+
+        if available_balance / total_wallet_balance > self.safety_coef:
+            return {asset: 0.0 for asset in assets}
         else:
-            leverages_dict = {}
-
+            leverage_df = pd.DataFrame(index=['perp', 'quart'], columns=assets)
             for asset in assets:
-                for position in positions:
-                    if position['symbol'].startswith(asset + 'USDT_'):
-                        ticker_quart = position['symbol']
-                        current_amount = position['positionAmt']
-                        perp = asset + 'USDT'
+                leverage_df.loc['perp', asset] = self._leverage_usdt_m(
+                    ticker=self.provider_hyperparams_strategy.get_ticker_by_asset(section=section, asset=asset,
+                                                                                  kind='perp'),
+                    twb=total_wallet_balance)
 
-                        current_price_perp = self.data_provider_usdt_m.get_price(asset + 'USDT')
-                        current_price_quart = self.data_provider_usdt_m.get_price(ticker_quart)
+                leverage_df.loc['quart', asset] = self._leverage_usdt_m(
+                    ticker=self.provider_hyperparams_strategy.get_ticker_by_asset(section=section, asset=asset,
+                                                                                  kind='quart'),
+                    twb=total_wallet_balance)
+            leverage_df = leverage_df.astype(float)
 
-                        quart_lev = self._leverage_usdt_m(current_amount=current_amount,
-                                                          current_price=current_price_quart,
-                                                          twb=total_wallet_balance)
+            type_contract = leverage_df.sum(axis=1).abs().nlargest(1).index.values[0]
+            delta = abs(leverage_df.loc[type_contract].sum()) - account_max_leverage
 
-                        perp_lev = self._leverage_usdt_m(current_amount=current_amount,
-                                                         current_price=current_price_perp,
-                                                         twb=total_wallet_balance)
-                        leverages_dict[asset] = {'perp': [perp, perp_lev], 'quart': [ticker_quart, quart_lev]}
-            max_leverage = self.provider_hyperparams.get_max_leverage(section=section)
-            l_quart = 0
-            l_perp = 0
-            for asset in leverages_dict.keys():
-                l_quart += leverages_dict[asset]['quart'][1]
-                l_perp += leverages_dict[asset]['perp'][1]
+            close_series = leverage_df.loc[type_contract].copy()
+            close_series = close_series / close_series.sum() * delta
+            result = {}
 
-            current_leverage = max(l_quart, abs(l_perp))
+            for asset, amount in close_series.items():
+                ticker_perp = self.provider_hyperparams_strategy.get_ticker_by_asset(section=section, asset=asset,
+                                                                                     kind='perp')
+                ticker_quart = self.provider_hyperparams_strategy.get_ticker_by_asset(section=section, asset=asset,
+                                                                                      kind='quart')
 
-            mean_delta = (current_leverage - max_leverage) / len(leverages_dict.keys())
-            if mean_delta <= 0:
-                return {asset: 0 for asset in assets}
+                result[asset] = self._get_amount_ticker_usdt_m(amount, total_wallet_balance, ticker_perp, ticker_quart)
+            return result
 
-            rebalance = {}
-            for asset, leverages_asset in leverages_dict.items():
-                l_asset_quart = float(leverages_asset['quart'][1]) - mean_delta
-                l_asset_perp = float(leverages_asset['perp'][1]) - mean_delta
-                max_asset_leverage = max(l_asset_perp, l_asset_quart)
-
-                rebalance[asset] = max(0,
-                                       max_asset_leverage) * total_wallet_balance / self.data_provider_usdt_m.get_price(
-                    ticker=leverages_asset['perp'][0])
-            return rebalance
-
-    def _analyze_account_coin_m(self):
-        account_info = self.data_provider_coin_m.get_account_info()
-        tickers_info = account_info['tickers']
-        strategy_tickers = self.provider_hyperparams.get_all_assets('COIN-M')
-        balances_dict = {}
-
-        for ticker_info in tickers_info:
-            for ticker in strategy_tickers:
-                if ticker_info['ticker'] == ticker:
-                    balances_dict[ticker] = [ticker_info['availableBalance'], ticker_info['walletBalance']]
-        rebalance = {}
-        for asset, balances in balances_dict.items():
-            try:
-                if balances[0] / balances[1] > 1:
-                    rebalance[asset] = {'volume': 0.0, 'quart': None}
-                else:
-                    perp, curr_q, next_q = self.provider_hyperparams.get_futures(section='COIN-M', asset=asset)
-
-                    l_perp = self._leverage_coin_m(perp)
-                    l_curr = self._leverage_coin_m(curr_q)
-                    l_next = self._leverage_coin_m(next_q)
-                    l_max = self.provider_hyperparams.get_max_leverage(section='COIN-M')
-                    l_account = max(l_curr + l_next, abs(l_perp))
-                    delta = max(0, l_account - l_max)
-
-                    volume = delta * balances_dict[asset][1] * self.data_provider_coin_m.get_price(
-                        perp) / self.data_provider_coin_m.get_contract_size(perp)
-
-                    rebalance[asset] = {'volume': volume, 'quart': curr_q if l_curr > l_next else next_q}
-
-            except ZeroDivisionError:
-                rebalance[asset] = {'volume': 0.0, 'quart': None}
-        return rebalance
-
-    @staticmethod
-    def _leverage_usdt_m(current_amount, current_price, twb):
-        return current_amount * current_price / twb
+    def _leverage_usdt_m(self, ticker, twb):
+        return self.data_provider_usdt_m.get_amount_positions(ticker) * self.data_provider_usdt_m.get_price(
+            ticker=ticker) / twb
 
     def _leverage_coin_m(self, ticker):
         return self.data_provider_coin_m.get_amount_positions(ticker) * self.data_provider_coin_m.get_contract_size(
             ticker) / self.data_provider_coin_m.get_price(ticker)
+
+    def _get_amount_ticker_usdt_m(self, amount, twb, ticker_1, ticker_2):
+        return amount * twb / max(self.data_provider_usdt_m.get_price(ticker_1),
+                                  self.data_provider_usdt_m.get_price(ticker_2))

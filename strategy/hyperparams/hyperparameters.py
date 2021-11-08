@@ -54,10 +54,10 @@ strategy_hyperparams = {
 account_hyperparams = {
     'USDT-M':
         {
-            'leverage_max': 20,
+            'leverage_max': 4,
         },
     'COIN-M':
         {
-            'leverage_max': 20,
+            'leverage_max': 4,
         }
 }
