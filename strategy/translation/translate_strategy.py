@@ -16,6 +16,7 @@ class TranslateInstructions:
         self.generate_position = GeneratePosition()
 
     def parse(self, instructions: dict):
+
         instructions_usdt_m = instructions.get('USDT-M')
         executor_usdt_m, executor_coin_m = [], []
         if instructions_usdt_m is not None:
@@ -24,11 +25,13 @@ class TranslateInstructions:
         instructions_coin_m = instructions.get('COIN-M')
         if instructions_coin_m is not None:
             executor_coin_m = self._parse(instructions_coin_m['actions'], 'COIN-M')
+
         executor_instructions = executor_usdt_m + executor_coin_m
         logger.info(msg='Final instructions: ', extra=dict(executor_instructions=executor_instructions))
         return executor_instructions
 
     def _parse(self, instructions_section: dict, section: str):
+
         executor_instructions = []
         for coin in instructions_section.keys():
             coin_actions = instructions_section[coin]
@@ -36,8 +39,8 @@ class TranslateInstructions:
             part = coin_actions[1]
             perp_ticker, quart_ticker = coin_actions[2]
             if work == 'exit':
-                executor_instructions.append(self._parse_exit(part=part, perp_ticker=perp_ticker,
-                                                              quart_ticker=quart_ticker, section=section))
+                executor_instructions.append(
+                    self._parse_exit(part=part, quart_ticker=quart_ticker, section=section, perp_ticker=perp_ticker))
             elif work == 'setup':
                 executor_instructions.append(self._parse_setup(part=part, perp_ticker=perp_ticker,
                                                                quart_ticker=quart_ticker, section=section,
@@ -52,23 +55,18 @@ class TranslateInstructions:
             total_amount = self._size_coin_m(part, ticker, perp_ticker)
         else:
             raise NotImplementedError
+        return self.generate_position.get_open_position_instruction(section=section, market_ticker=quart_ticker,
+                                                                    limit_ticker=perp_ticker, total_amount=total_amount)
 
-        self.generate_position.generate(section=section, market_ticker=quart_ticker, limit_ticker=perp_ticker,
-                                        total_amount=total_amount)
-
-        return self.generate_position.get_open_position_instruction()
-
-    def _parse_exit(self, part: float, perp_ticker: str, quart_ticker: str, section: str):
+    def _parse_exit(self, part: float, quart_ticker: str, section: str, perp_ticker: str):
         # Exit shows what proportion of assets needs to be closed
         # Ex: If Exit = 1. It's mean that we have to close all
         total_amount = self._size_exit(part, quart_ticker, section)
+        return self.generate_position.get_close_position_instruction(section=section, market_ticker=quart_ticker,
+                                                                     limit_ticker=perp_ticker,
+                                                                     total_amount=total_amount)
 
-        self.generate_position.generate(section=section, market_ticker=quart_ticker, limit_ticker=perp_ticker,
-                                        total_amount=total_amount)
-
-        return self.generate_position.close_position()
-
-    def _size_exit(self, part: float, quart_ticker: str, section) -> float:
+    def _size_exit(self, part: float, quart_ticker: str, section: str) -> float:
         if section == 'USDT-M':
             amt = self.data_provider_usdt_m.get_amount_positions(quart_ticker)
             result = float(amt * part)
