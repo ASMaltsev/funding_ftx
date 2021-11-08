@@ -1,3 +1,6 @@
+from strategy.others import inverse_operation
+
+
 class GeneratePosition:
 
     def __init__(self):
@@ -7,8 +10,8 @@ class GeneratePosition:
             'reduce_only': False,
         }
         _close_position = {
-            'limit_side': self._inverse_operation(_open_position['limit_side']),
-            'market_side': self._inverse_operation(_open_position['market_side']),
+            'limit_side': inverse_operation(_open_position['limit_side']),
+            'market_side': inverse_operation(_open_position['market_side']),
             'reduce_only': not _open_position['reduce_only'],
         }
 
@@ -27,13 +30,6 @@ class GeneratePosition:
             'section': '',
         }
         self.close_position.update(_close_position)
-
-    @staticmethod
-    def _inverse_operation(operation):
-        if operation == 'sell':
-            return 'buy'
-        elif operation == 'buy':
-            return 'sell'
 
     def get_open_position_instruction(self, section, market_ticker, limit_ticker, total_amount):
         self.open_position['section'] = section
