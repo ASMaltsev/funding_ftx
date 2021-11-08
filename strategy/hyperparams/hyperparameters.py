@@ -2,7 +2,7 @@ strategy_hyperparams = {
     'base_fr_earn': 0.1095,
     'A': -0.4,
     'k': 0.0495,
-    'time_exit': 9,
+    'time_exit': 100,
     'save_time': lambda x: x + 5,
     'USDT-M':
         {
@@ -54,10 +54,10 @@ strategy_hyperparams = {
 account_hyperparams = {
     'USDT-M':
         {
-            'leverage_max': 20,
+            'leverage_max': 3,
         },
     'COIN-M':
         {
-            'leverage_max': 20,
+            'leverage_max': 3,
         }
 }
