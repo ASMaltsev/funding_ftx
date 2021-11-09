@@ -27,7 +27,6 @@ class TranslateStrategyInstructions:
             executor_coin_m = self._parse(instructions_coin_m['actions'], 'COIN-M')
 
         executor_instructions = executor_usdt_m + executor_coin_m
-        logger.info(msg='Final instructions: ', extra=dict(executor_instructions=executor_instructions))
         return executor_instructions
 
     def _parse(self, instructions_section: dict, section: str):

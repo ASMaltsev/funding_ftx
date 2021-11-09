@@ -5,7 +5,7 @@ from strategy.data_provider import BinanceDataProvider
 
 import itertools
 
-logger = Logger('strategy').create()
+logger = Logger('Alpha').create()
 
 
 class FundingAlpha(AbstractAlpha):
