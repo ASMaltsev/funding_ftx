@@ -70,3 +70,65 @@ class AbstractExecutorDataProvider(ABC):
         @param order_id: order id
         @return: order status (NEW, FILLED, EXPIRED, PARTIALLY_FILLED), executed quantity
         """
+
+    @abstractmethod
+    def get_account_info(self) -> dict:
+        """
+        @return: Account info
+        """
+
+    @abstractmethod
+    def get_balance(self, ticker) -> float:
+        """
+        @param ticker: ticker name
+        @return: balance
+        """
+
+    @abstractmethod
+    def get_price(self, ticker) -> float:
+        """
+        @param ticker: ticker
+        @return: price ticker
+        """
+
+    @abstractmethod
+    def get_contract_size(self, ticker) -> float:
+        """
+        @param ticker: ticker
+        @return: contract size
+        """
+
+    @abstractmethod
+    def get_mid_price(self, ticker) -> float:
+        """
+        @param ticker: ticker
+        @return: (best_bid + best_ask) / 2
+        """
+
+    @abstractmethod
+    def get_spread(self, ticker_swap, ticker_quart) -> float:
+        """
+        @param ticker_swap: ticker swap
+        @param ticker_quart: ticker quart
+        @return: spread between swap and quart
+        """
+
+    @abstractmethod
+    def get_tte(self, ticker):
+        """
+        @param ticker: ticker
+        @return: tte
+        """
+
+    @abstractmethod
+    def min_size_for_market_order(self, ticker):
+        """
+        @param ticker: ticker
+        @return: min size for order
+        """
+
+    @abstractmethod
+    def get_exchange_info(self) -> dict:
+        """
+        @return: Exchange info
+        """

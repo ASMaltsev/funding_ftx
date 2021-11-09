@@ -6,6 +6,7 @@ from connectors import ConnectorRouter
 
 import connectors.exceptions
 from strategy.logging import Logger
+from strategy.others import inverse_operation
 from strategy.data_provider.abstract_provider.abstract_data_provider import AbstractExecutorDataProvider
 from strategy.data_provider.binanace_provider.binance_data_ws import WebSocketStream
 
@@ -82,17 +83,17 @@ class BinanceDataProvider(AbstractExecutorDataProvider):
         return self.connector.get_account_info()
 
     @update_rpc
-    def get_balance(self, symbol):
-        return self.connector.get_balances(symbol=symbol)
+    def get_balance(self, ticker):
+        return self.connector.get_balances(symbol=ticker)
 
     @update_rpc
     def get_price(self, ticker):
         return self.connector.get_price(ticker=ticker)
 
     @update_rpc
-    def get_contract_size(self, symbol):
+    def get_contract_size(self, ticker):
         for symbols_info in self.connector.get_exchange_info()['symbols']:
-            if symbols_info['symbol'] == symbol:
+            if symbols_info['symbol'] == ticker:
                 return float(symbols_info['contractSize'])
         return 0
 
@@ -165,8 +166,8 @@ class BinanceDataProvider(AbstractExecutorDataProvider):
 
         return spread_pct, spread_apr
 
-    def get_tte(self, ticker_quart) -> int:
-        tte = ticker_quart.split('_')[1]
+    def get_tte(self, ticker):
+        tte = ticker.split('_')[1]
         y = '20' + tte[:2]
         m = tte[2:4]
         d = tte[4:]
@@ -215,7 +216,7 @@ class BinanceDataProvider(AbstractExecutorDataProvider):
 
                 logger.info(msg='Start correction', extra=dict(Correct_size=correct_size, precision=precision))
 
-                self.make_market_order(ticker=ticker, side=self._get_inverse_market_op(side), quantity=correct_size)
+                self.make_market_order(ticker=ticker, side=inverse_operation(side), quantity=correct_size)
                 self.make_market_order(ticker=ticker, side=side, quantity=round(quantity + correct_size, precision))
 
             elif str(e).find('-4003') > 0:  # {'code': -4003, 'msg': 'Quantity less than zero.'}
@@ -233,13 +234,3 @@ class BinanceDataProvider(AbstractExecutorDataProvider):
     @update_rpc
     def get_available_balance(self, ticker, section):
         pass
-
-    @staticmethod
-    def _get_inverse_market_op(side):
-        side = side.lower()
-        if side == 'sell':
-            return 'buy'
-        elif side == 'buy':
-            return 'sell'
-        else:
-            return NotImplementedError
