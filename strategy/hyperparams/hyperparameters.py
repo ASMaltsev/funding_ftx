@@ -17,11 +17,13 @@ strategy_hyperparams = {
                         {
                             'perp': 'ETHUSDT',
                             'quart': 'ETHUSDT_211231',
+                            'min_batch_size': 2,
                         },
                     'BTC':
                         {
                             'perp': 'BTCUSDT',
                             'quart': 'BTCUSDT_211231',
+                            'min_batch_size': 1,
                         },
                 }
         },
@@ -39,6 +41,7 @@ strategy_hyperparams = {
                             'perp': 'ETHUSD_PERP',
                             'current': 'ETHUSD_211231',
                             'next': 'ETHUSD_220325',
+                            'min_batch_size': 10,
                         },
                     'BTC':
 
@@ -46,6 +49,7 @@ strategy_hyperparams = {
                             'perp': 'BTCUSD_PERP',
                             'current': 'BTCUSD_211231',
                             'next': 'BTCUSD_220325',
+                            'min_batch_size': 5,
                         }
                 }
         }

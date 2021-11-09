@@ -63,6 +63,10 @@ class ProviderHyperParamsStrategy:
     def get_ticker_by_asset(section: str, asset: str, kind: str):
         return strategy_hyperparams[section]['assets'][asset][kind]
 
+    @staticmethod
+    def get_min_batch_size(section: str, asset: str) -> float:
+        return float(strategy_hyperparams[section]['assets'][asset]['min_batch_size'])
+
 
 class AccountHyperParams:
 

@@ -3,6 +3,7 @@ from strategy.logging import Logger
 from strategy.risk_control import RealStatePositions, Rebalancer
 from strategy.translation import TranslateStrategyInstructions, TranslateLeverage
 from strategy.alpha import FundingAlpha
+from strategy.hyperparams import ProviderHyperParamsStrategy
 from strategy.executor.binance_executor.executor import BinanceExecutor
 
 logger = Logger('DadExecutor').create()
@@ -16,11 +17,17 @@ class DadExecutor:
 
         self.data_provider_usdt_m = BinanceDataProvider(api_key=api_key, secret_key=secret_key, section='USDT-M')
         self.data_provider_coin_m = BinanceDataProvider(api_key=api_key, secret_key=secret_key, section='COIN-M')
+        self.hyperparams_provider = ProviderHyperParamsStrategy()
 
     def execute(self):
-        executor_instructions = self._generate_instructions()
-        for executor_instruction in executor_instructions:
-            BinanceExecutor(self.api_key, self.secret_key, **executor_instruction).execute()
+        while True:
+            executor_instructions = self._generate_instructions()
+            for executor_instruction in executor_instructions:
+                batches = self._generate_batches(executor_instruction)
+                for batch in batches:
+                    BinanceExecutor(self.api_key, self.secret_key, **batch).execute()
+                    break
+                break
 
     def _generate_instructions(self):
         instructions = FundingAlpha().decide()
@@ -95,3 +102,15 @@ class DadExecutor:
                                                                          rebalancer_instruction['total_amount'])
                         update_instructions.append(rebalancer_instruction.copy())
         return update_instructions
+
+    def _generate_batches(self, instruction: dict) -> list:
+        assets = self.hyperparams_provider.get_assets(instruction['section'])
+        min_batch_size = 0
+        for asset in assets:
+            if instruction['limit_ticker'].startswith(asset):
+                min_batch_size = self.hyperparams_provider.get_min_batch_size(instruction['section'], asset)
+        count = int(instruction['total_amount'] / min_batch_size)
+        if count == 0:
+            return [instruction]
+        instruction['total_amount'] /= count
+        return count * [instruction]
