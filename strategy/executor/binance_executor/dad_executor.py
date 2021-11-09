@@ -1,7 +1,10 @@
 from strategy.data_provider.binanace_provider.binance_data_provider import BinanceDataProvider
 from strategy.others import inverse_operation
+from strategy.logging import Logger
 from strategy.risk_control import RealStatePositions, Rebalancer
 from strategy.translation import TranslateStrategyInstructions, TranslateLeverage
+
+logger = Logger('DadExecutor').create()
 
 
 class DadExecutor:
@@ -17,28 +20,40 @@ class DadExecutor:
         strategy_instructions = TranslateStrategyInstructions(self.data_provider_usdt_m,
                                                               self.data_provider_coin_m).parse(instructions)
 
+        logger.info(msg='Strategy instructions:', extra=dict(strategy_instructions=strategy_instructions))
+
         real_position_quart, real_position_perp = RealStatePositions(data_provider_usdt_m=self.data_provider_usdt_m,
-                                                                     data_provider_coin_m=self.data_provider_coin_m)\
-                                                                    .get_positions()
+                                                                     data_provider_coin_m=self.data_provider_coin_m) \
+            .get_positions()
+
+        logger.info(msg='Real positions:',
+                    extra=dict(real_position_quart=real_position_quart, real_position_perp=real_position_perp))
 
         update_instructions = self._correction_strategy_position(strategy_instructions, real_position_quart)
 
+        logger.info(msg='Adjusted positions:', extra=dict(instructions=update_instructions))
+
         rebalancer_instructions = Rebalancer(data_provider_usdt_m=self.data_provider_usdt_m,
                                              data_provider_coin_m=self.data_provider_coin_m).analyze_account()
+
+        logger.info(msg='Rebalancer instructions:', extra=dict(rebalancer_instructions=rebalancer_instructions))
 
         close_positions = TranslateLeverage(
             data_provider_usdt_m=self.data_provider_usdt_m,
             data_provider_coin_m=self.data_provider_coin_m).translate(rebalancer_instructions)
 
+        logger.info(msg='Close positions:', extra=dict(close_positions=close_positions))
+
         pre_final_instructions = self._union_instructions(update_instructions, close_positions)
+        logger.info(msg='Pre final instructions:', extra=dict(pre_final_instructions=pre_final_instructions))
+
         final_instructions = []
         for pre_final_instruction in pre_final_instructions:
             if pre_final_instruction['total_amount'] > 0:
                 final_instructions.append(pre_final_instruction.copy())
 
-        print(final_instructions)
-        print(real_position_quart)
-        print(real_position_perp)
+        logger.info(msg='Final instructions:', extra=dict(final_instructions=final_instructions))
+        return final_instructions
 
     @staticmethod
     def _correction_strategy_position(strategy_positions, real_quart_positions):
