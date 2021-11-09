@@ -2,6 +2,8 @@ from strategy.data_provider.binanace_provider.binance_data_provider import Binan
 from strategy.logging import Logger
 from strategy.risk_control import RealStatePositions, Rebalancer
 from strategy.translation import TranslateStrategyInstructions, TranslateLeverage
+from strategy.alpha import FundingAlpha
+from strategy.executor.binance_executor.executor import BinanceExecutor
 
 logger = Logger('DadExecutor').create()
 
@@ -15,7 +17,14 @@ class DadExecutor:
         self.data_provider_usdt_m = BinanceDataProvider(api_key=api_key, secret_key=secret_key, section='USDT-M')
         self.data_provider_coin_m = BinanceDataProvider(api_key=api_key, secret_key=secret_key, section='COIN-M')
 
-    def execute(self, instructions: dict):
+    def execute(self):
+        executor_instructions = self._generate_instructions()
+        for executor_instruction in executor_instructions:
+            BinanceExecutor(self.api_key, self.secret_key, **executor_instruction).execute()
+
+    def _generate_instructions(self):
+        instructions = FundingAlpha().decide()
+
         strategy_instructions = TranslateStrategyInstructions(self.data_provider_usdt_m,
                                                               self.data_provider_coin_m).parse(instructions)
         logger.info(msg='Strategy instructions:', extra=dict(strategy_instructions=strategy_instructions))
