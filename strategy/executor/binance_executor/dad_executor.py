@@ -16,9 +16,13 @@ class DadExecutor:
     def execute(self, instructions: dict):
         strategy_instructions = TranslateStrategyInstructions(self.data_provider_usdt_m,
                                                               self.data_provider_coin_m).parse(instructions)
-        real_position = RealStatePositions(data_provider_usdt_m=self.data_provider_usdt_m,
-                                           data_provider_coin_m=self.data_provider_coin_m).get_positions()
-        update_instructions = self._correction_strategy_position(strategy_instructions, real_position)
+
+        real_position_quart, real_position_perp = RealStatePositions(data_provider_usdt_m=self.data_provider_usdt_m,
+                                                                     data_provider_coin_m=self.data_provider_coin_m)\
+                                                                    .get_positions()
+
+        update_instructions = self._correction_strategy_position(strategy_instructions, real_position_quart)
+
         rebalancer_instructions = Rebalancer(data_provider_usdt_m=self.data_provider_usdt_m,
                                              data_provider_coin_m=self.data_provider_coin_m).analyze_account()
 
@@ -31,7 +35,10 @@ class DadExecutor:
         for pre_final_instruction in pre_final_instructions:
             if pre_final_instruction['total_amount'] > 0:
                 final_instructions.append(pre_final_instruction.copy())
+
         print(final_instructions)
+        print(real_position_quart)
+        print(real_position_perp)
 
     @staticmethod
     def _correction_strategy_position(strategy_positions, real_quart_positions):
@@ -41,7 +48,7 @@ class DadExecutor:
             real_amount = real_quart_positions.get(strategy_position['market_ticker'],
                                                    0) + real_quart_positions.get(
                 strategy_position['limit_ticker'], 0)
-            strategy_position['total_amount'] -= real_amount
+            strategy_position['total_amount'] -= real_amount  # TODO: если стратегия setup то amount=0, а если выход
             if strategy_position['total_amount'] < 0:
                 strategy_position['total_amount'] = abs(strategy_position['total_amount'])
                 strategy_position['limit_side'] = inverse_operation(strategy_position['limit_side'])
