@@ -1,5 +1,4 @@
 from strategy.data_provider.binanace_provider.binance_data_provider import BinanceDataProvider
-from strategy.others import inverse_operation
 from strategy.logging import Logger
 from strategy.risk_control import RealStatePositions, Rebalancer
 from strategy.translation import TranslateStrategyInstructions, TranslateLeverage
@@ -19,7 +18,6 @@ class DadExecutor:
     def execute(self, instructions: dict):
         strategy_instructions = TranslateStrategyInstructions(self.data_provider_usdt_m,
                                                               self.data_provider_coin_m).parse(instructions)
-
         logger.info(msg='Strategy instructions:', extra=dict(strategy_instructions=strategy_instructions))
 
         real_position_quart, real_position_perp = RealStatePositions(data_provider_usdt_m=self.data_provider_usdt_m,
@@ -50,6 +48,10 @@ class DadExecutor:
         final_instructions = []
         for pre_final_instruction in pre_final_instructions:
             if pre_final_instruction['total_amount'] > 0:
+                try:
+                    del pre_final_instruction['strategy_section']
+                except KeyError:
+                    pass
                 final_instructions.append(pre_final_instruction.copy())
 
         logger.info(msg='Final instructions:', extra=dict(final_instructions=final_instructions))
@@ -60,15 +62,12 @@ class DadExecutor:
         update_strategy_positions = []
 
         for strategy_position in strategy_positions:
-            real_amount = real_quart_positions.get(strategy_position['market_ticker'],
-                                                   0) + real_quart_positions.get(
-                strategy_position['limit_ticker'], 0)
-            strategy_position['total_amount'] -= real_amount  # TODO: если стратегия setup то amount=0, а если выход
-            if strategy_position['total_amount'] < 0:
-                strategy_position['total_amount'] = abs(strategy_position['total_amount'])
-                strategy_position['limit_side'] = inverse_operation(strategy_position['limit_side'])
-                strategy_position['market_side'] = inverse_operation(strategy_position['market_side'])
-
+            real_amount = real_quart_positions.get(strategy_position['market_ticker'], 0) \
+                          + real_quart_positions.get(strategy_position['limit_ticker'], 0)
+            if strategy_position['strategy_section'] == 'setup':
+                strategy_position['total_amount'] = max(0, strategy_position['total_amount'] - real_amount)
+            elif strategy_position['strategy_section'] == 'exit':
+                strategy_position['total_amount'] = min(strategy_position['total_amount'], real_amount)
             update_strategy_positions.append(strategy_position.copy())
         return update_strategy_positions
 
@@ -82,5 +81,8 @@ class DadExecutor:
                     if rebalancer_instruction['total_amount'] == 0:
                         update_instructions.append(strategy_instruction.copy())
                     else:
+                        if strategy_instruction['strategy_section'] == 'exit':
+                            rebalancer_instruction['total_amount'] = max(strategy_instruction['total_amount'],
+                                                                         rebalancer_instruction['total_amount'])
                         update_instructions.append(rebalancer_instruction.copy())
         return update_instructions

@@ -26,8 +26,7 @@ class TranslateStrategyInstructions:
         if instructions_coin_m is not None:
             executor_coin_m = self._parse(instructions_coin_m['actions'], 'COIN-M')
 
-        executor_instructions = executor_usdt_m + executor_coin_m
-        return executor_instructions
+        return executor_usdt_m + executor_coin_m
 
     def _parse(self, instructions_section: dict, section: str):
 
@@ -38,15 +37,19 @@ class TranslateStrategyInstructions:
             part = coin_actions[1]
             perp_ticker, quart_ticker = coin_actions[2]
             if work == 'exit':
-                executor_instructions.append(
-                    self._parse_exit(part=part, quart_ticker=quart_ticker, section=section, perp_ticker=perp_ticker))
+                res = self._parse_exit(part=part, quart_ticker=quart_ticker, section=section,
+                                       perp_ticker=perp_ticker)
+                res['strategy_section'] = 'exit'
+                executor_instructions.append(res)
             elif work == 'setup':
-                executor_instructions.append(self._parse_setup(part=part, perp_ticker=perp_ticker,
-                                                               quart_ticker=quart_ticker, section=section,
-                                                               coin=coin))
-        return executor_instructions
+                res = self._parse_setup(part=part, perp_ticker=perp_ticker,
+                                        quart_ticker=quart_ticker, section=section,
+                                        coin=coin)
+                res['strategy_section'] = 'setup'
+                executor_instructions.append(res)
+            return executor_instructions
 
-    def _parse_setup(self, part: float, perp_ticker: str, quart_ticker: str, section: str, coin: str):
+    def _parse_setup(self, part: float, perp_ticker: str, quart_ticker: str, section: str, coin: str) -> dict:
         if section == 'USDT-M':
             total_amount = self._size_usdt_m(part, quart_ticker)
         elif section == 'COIN-M':
@@ -55,9 +58,10 @@ class TranslateStrategyInstructions:
         else:
             raise NotImplementedError
         return self.generate_position.get_open_position_instruction(section=section, market_ticker=quart_ticker,
-                                                                    limit_ticker=perp_ticker, total_amount=total_amount)
+                                                                    limit_ticker=perp_ticker,
+                                                                    total_amount=total_amount)
 
-    def _parse_exit(self, part: float, quart_ticker: str, section: str, perp_ticker: str):
+    def _parse_exit(self, part: float, quart_ticker: str, section: str, perp_ticker: str) -> dict:
         # Exit shows what proportion of assets needs to be closed
         # Ex: If Exit = 1. It's mean that we have to close all
         total_amount = self._size_exit(part, quart_ticker, section)
