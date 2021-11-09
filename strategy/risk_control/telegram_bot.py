@@ -3,7 +3,6 @@ import ast
 import time
 from telebot import types
 
-
 token = '2116226519:AAEPqDgHtE6Rs-fTVttpeM7rwH3IiIWnb-Y'
 bot = telebot.TeleBot(token)
 
