@@ -16,7 +16,6 @@ class TranslateStrategyInstructions:
         self.generate_position = GeneratePosition()
 
     def parse(self, instructions: dict):
-
         instructions_usdt_m = instructions.get('USDT-M')
         executor_usdt_m, executor_coin_m = [], []
         if instructions_usdt_m is not None:
@@ -29,7 +28,6 @@ class TranslateStrategyInstructions:
         return executor_usdt_m + executor_coin_m
 
     def _parse(self, instructions_section: dict, section: str):
-
         executor_instructions = []
         for coin in instructions_section.keys():
             coin_actions = instructions_section[coin]
@@ -47,7 +45,7 @@ class TranslateStrategyInstructions:
                                         coin=coin)
                 res['strategy_section'] = 'setup'
                 executor_instructions.append(res)
-            return executor_instructions
+        return executor_instructions
 
     def _parse_setup(self, part: float, perp_ticker: str, quart_ticker: str, section: str, coin: str) -> dict:
         if section == 'USDT-M':
