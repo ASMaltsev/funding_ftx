@@ -1,9 +1,12 @@
+import sys
 from strategy.data_provider.binanace_provider.binance_data_provider import BinanceDataProvider
 from strategy.logging import Logger
 from strategy.risk_control import RealStatePositions, Rebalancer
 from strategy.translation import TranslateStrategyInstructions, TranslateLeverage
 from strategy.alpha import FundingAlpha
 from strategy.hyperparams import ProviderHyperParamsStrategy
+from strategy.risk_control import TelegramBot
+
 from strategy.executor.binance_executor.executor import BinanceExecutor
 
 logger = Logger('DadExecutor').create()
@@ -28,13 +31,15 @@ class DadExecutor:
                     BinanceExecutor(self.api_key, self.secret_key, **batch).execute()
                     break
                 break
+            break
 
     def _generate_instructions(self):
         instructions = FundingAlpha().decide()
-
+        logger.info(msg='Strategy instructions: ', extra=dict(instructions=instructions))
         strategy_instructions = TranslateStrategyInstructions(self.data_provider_usdt_m,
                                                               self.data_provider_coin_m).parse(instructions)
-        logger.info(msg='Strategy instructions:', extra=dict(strategy_instructions=strategy_instructions))
+
+        logger.info(msg='Update strategy instructions:', extra=dict(strategy_instructions=strategy_instructions))
 
         real_position_quart, real_position_perp = RealStatePositions(data_provider_usdt_m=self.data_provider_usdt_m,
                                                                      data_provider_coin_m=self.data_provider_coin_m) \
@@ -71,7 +76,20 @@ class DadExecutor:
                 final_instructions.append(pre_final_instruction.copy())
 
         logger.info(msg='Final instructions:', extra=dict(final_instructions=final_instructions))
+        self.control_strategy(final_instructions=final_instructions,
+                              real_positions={**real_position_perp, **real_position_quart})
         return final_instructions
+
+    @staticmethod
+    def control_strategy(final_instructions, real_positions):
+        bot = TelegramBot()
+        continue_work = bot.start(final_instructions=final_instructions,
+                                  real_positions=real_positions)
+        if continue_work:
+            bot.send_message('OK')
+        else:
+            bot.send_message('STOP')
+            sys.exit(0)
 
     @staticmethod
     def _correction_strategy_position(strategy_positions, real_quart_positions):
