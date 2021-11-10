@@ -5,8 +5,8 @@ class GeneratePosition:
 
     def __init__(self):
         _open_position = {
-            'limit_side': 'buy',
-            'market_side': 'sell',
+            'limit_side': 'sell',
+            'market_side': 'buy',
             'reduce_only': False,
         }
         _close_position = {
