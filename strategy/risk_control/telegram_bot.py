@@ -3,22 +3,22 @@ import ast
 import time
 from telebot import types
 
-#INS
-token = '2141088886:AAGhy42cmvbvgGmSfJ_3wxd00lL3MYjZ3HA'
-chat_id = -711071654
+# #INS
+# token = '2141088886:AAGhy42cmvbvgGmSfJ_3wxd00lL3MYjZ3HA'
+# chat_id = -711071654
 
 
 #TEST API
-# token = '2116226519:AAEPqDgHtE6Rs-fTVttpeM7rwH3IiIWnb-Y'
-# chat_id = -766294450
-
+token = '2116226519:AAEPqDgHtE6Rs-fTVttpeM7rwH3IiIWnb-Y'
+chat_id = -766294450
 
 bot = telebot.TeleBot(token)
 
 @bot.message_handler(commands=['ok'])
 def action(call):
     if call.chat.id == chat_id:
-        self.bot.stop_bot()
+        bot.stop_bot()
+
 
 class TelegramBot:
 
@@ -35,7 +35,4 @@ class TelegramBot:
         self.bot.send_message(chat_id=self.chat_id, text=real_positions)
         self.bot.send_message(chat_id=self.chat_id, text=final_instructions)
 
-        try:
-            self.bot.polling(none_stop=True, interval=0, timeout=20)
-        except:
-            return True
+        self.bot.polling(none_stop=True, interval=0, timeout=20)
