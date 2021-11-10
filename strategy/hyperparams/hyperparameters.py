@@ -2,7 +2,7 @@ strategy_hyperparams = {
     'base_fr_earn': 0.1095,
     'A': 0.04,
     'k': 0.0495,
-    'time_exit': 9,
+    'time_exit': 109,
     'save_time': lambda x: x + 5,
     'USDT-M':
         {
