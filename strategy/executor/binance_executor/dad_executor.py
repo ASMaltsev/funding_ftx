@@ -27,6 +27,7 @@ class DadExecutor:
             executor_instructions = self._generate_instructions()
             for executor_instruction in executor_instructions:
                 batches = self._generate_batches(executor_instruction)
+                logger.info(msg='Batches: ', extra=dict(batches=batches))
                 for batch in batches:
                     BinanceExecutor(self.api_key, self.secret_key, **batch).execute()
                     break
@@ -127,8 +128,12 @@ class DadExecutor:
         for asset in assets:
             if instruction['limit_ticker'].startswith(asset):
                 min_batch_size = self.hyperparams_provider.get_min_batch_size(instruction['section'], asset)
+                break
         count = int(instruction['total_amount'] / min_batch_size)
         if count == 0:
             return [instruction]
-        instruction['total_amount'] /= count
-        return count * [instruction]
+        total_amount = instruction['total_amount']
+        instruction['total_amount'] = min_batch_size
+        res = [instruction.copy() for _ in range(count)]
+        res[-1]['total_amount'] += total_amount - count * min_batch_size
+        return res
