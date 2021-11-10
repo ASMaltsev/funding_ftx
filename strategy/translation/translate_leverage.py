@@ -1,3 +1,4 @@
+import math
 from strategy.translation import GeneratePosition
 from strategy.hyperparams import ProviderHyperParamsStrategy
 
@@ -31,13 +32,16 @@ class TranslateLeverage:
                                                                            asset=asset)
             next_ticker = self.hyperparams_provider.get_ticker_by_asset(section=section, kind='next', asset=asset)
 
+            amount = int(math.ceil(amount / 2))
+
             update_instructions.append(
                 self.generate_position.get_close_position_instruction(section=section, market_ticker=current_ticker,
                                                                       limit_ticker=perp_ticker,
-                                                                      total_amount=amount / 2))
+                                                                      total_amount=amount))
 
             update_instructions.append(
                 self.generate_position.get_close_position_instruction(section=section, market_ticker=next_ticker,
                                                                       limit_ticker=perp_ticker,
-                                                                      total_amount=amount / 2))
+                                                                      total_amount=amount))
+
         return update_instructions

@@ -1,4 +1,4 @@
-from strategy.risk_control import TelegramBot
+from strategy.risk_control.telegram_bot import TelegramBot
 
 final_instructions = \
     [
@@ -14,5 +14,5 @@ real_positions = {'ETHUSDT_211231': 0.05, 'BTCUSDT_211231': 0.002, 'ETHUSD_21123
                   'ETHUSD_PERP': -60.0,
                   'BTCUSD_PERP': -4.0}
 
-tb = TelegramBot()
-tb.start(final_instructions, real_positions)
+bot = TelegramBot()
+print(bot.start(final_instructions, real_positions))
