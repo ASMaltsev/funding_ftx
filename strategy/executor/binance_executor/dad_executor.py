@@ -25,6 +25,7 @@ class DadExecutor:
     def execute(self):
         while True:
             executor_instructions = self._generate_instructions()
+            logger.info(msg='Executor instructions: ', extra=dict(executor_instructions=executor_instructions))
             batches = self._generate_batches(executor_instructions)
             logger.info(msg='Batches: ', extra=dict(batches=batches))
             for batch in batches:
