@@ -34,6 +34,7 @@ class BinanceExecutor(AbstractExecutor):
         self._log_current_positions()
 
     def check_positions(self):
+        time.sleep(0.2)
         max_coef_delta = 1.2
         self.data_provider.cancel_all_orders(self.limit_ticker)
         self.data_provider.cancel_all_orders(self.market_ticker)
