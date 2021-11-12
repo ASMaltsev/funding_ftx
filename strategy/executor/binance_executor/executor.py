@@ -1,10 +1,8 @@
 from termcolor import colored
-
 import time
 import sys
 import requests
 from strategy.executor.abstract_executor import AbstractExecutor
-from strategy.data_provider import BinanceDataProvider
 from strategy.logging import Logger, send_log
 
 my_logger = Logger('Executor')
@@ -13,17 +11,13 @@ logger = my_logger.create()
 
 class BinanceExecutor(AbstractExecutor):
 
-    def __init__(self, api_key: str, secret_key: str, section: str, market_ticker: str, limit_ticker: str,
+    def __init__(self, data_provider, market_ticker: str, limit_ticker: str,
                  limit_side: str, market_side: str, total_amount: float, reduce_only: bool):
-        super().__init__(section)
 
-        self.data_provider = BinanceDataProvider(api_key=api_key, secret_key=secret_key, section=section)
+        self.data_provider = data_provider
+
         self.start_amount_limit = 0
         self.start_amount_market = 0
-
-        self.api_key = api_key
-        self.secret_key = secret_key
-
         self.market_ticker = market_ticker
         self.limit_ticker = limit_ticker
         self.limit_side = limit_side
@@ -115,8 +109,8 @@ class BinanceExecutor(AbstractExecutor):
             limit_qty = round(
                 min(self._get_limit_amount(ticker=self.limit_ticker), self.total_amount - self.current_amount_qty),
                 precision)
-            logger.info('Sleeping 60 sec for revocation RPC...')
-            time.sleep(60)
+            # logger.info('Sleeping 60 sec for revocation RPC...')
+            # time.sleep(60)
 
             logger.info(msg='Start shopping.',
                         extra=dict(market_ticker=self.market_ticker, market_side=self.market_side,
@@ -213,16 +207,11 @@ class BinanceExecutor(AbstractExecutor):
                     order_status, executed_qty = self.data_provider.get_order_status(ticker=self.limit_ticker,
                                                                                      order_id=order_id)
             return True
-
         except requests.ConnectionError as e:
-
             logger.error(msg=str(e))
-            self.data_provider = BinanceDataProvider(api_key=self.api_key, secret_key=self.secret_key,
-                                                     section=self.section)
             self.total_amount -= self.current_amount_qty
             self.current_amount_qty = 0
             self.check_positions()
             self.execute()
-
         finally:
             send_log()
