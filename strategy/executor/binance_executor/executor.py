@@ -69,6 +69,7 @@ class BinanceExecutor(AbstractExecutor):
             time.sleep(30)
 
     def _log_current_positions(self):
+        time.sleep(0.2)
         limit_amount = self.data_provider.get_amount_positions(self.limit_ticker)
         market_amount = self.data_provider.get_amount_positions(self.market_ticker)
         logger.info(msg=colored('Current positions:', 'green'),
@@ -80,8 +81,8 @@ class BinanceExecutor(AbstractExecutor):
                                market_amount=market_amount - self.start_amount_market,
                                delta=delta))
         if delta > 0:
-            logger.error(msg='Delta positions > 0.Stopped.', extra=dict(delta=delta))
-            sys.exit(0)
+            logger.error(msg='Delta positions > 0. Stopped.', extra=dict(delta=delta))
+            self.check_positions()
 
     def _get_limit_amount(self, ticker: str) -> float:
         """
