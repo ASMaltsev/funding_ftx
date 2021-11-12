@@ -25,13 +25,11 @@ class DadExecutor:
     def execute(self):
         while True:
             executor_instructions = self._generate_instructions()
-            for executor_instruction in executor_instructions:
-                batches = self._generate_batches(executor_instruction)
-                logger.info(msg='Batches: ', extra=dict(batches=batches))
-                for batch in batches:
-                    BinanceExecutor(self.api_key, self.secret_key, **batch).execute()
-                    break
-                break
+            batches = self._generate_batches(executor_instructions)
+            logger.info(msg='Batches: ', extra=dict(batches=batches))
+            for batch in batches:
+                del batch['section']
+                BinanceExecutor(self.data_provider_coin_m, **batch).execute()
             break
 
     def _generate_instructions(self):
@@ -122,18 +120,13 @@ class DadExecutor:
                         update_instructions.append(rebalancer_instruction.copy())
         return update_instructions
 
-    def _generate_batches(self, instruction: dict) -> list:
-        assets = self.hyperparams_provider.get_assets(instruction['section'])
-        min_batch_size = 0
-        for asset in assets:
-            if instruction['limit_ticker'].startswith(asset):
-                min_batch_size = self.hyperparams_provider.get_min_batch_size(instruction['section'], asset)
-                break
-        count = int(instruction['total_amount'] / min_batch_size)
-        if count == 0:
-            return [instruction]
-        total_amount = instruction['total_amount']
-        instruction['total_amount'] = min_batch_size
-        res = [instruction.copy() for _ in range(count)]
-        res[-1]['total_amount'] += total_amount - count * min_batch_size
-        return res
+    def _generate_batches(self, instructions: list) -> list:
+        for instruction in instructions:
+            assets = self.hyperparams_provider.get_assets(instruction['section'])
+            min_batch_size = 0
+            for asset in assets:
+                if instruction['limit_ticker'].startswith(asset):
+                    min_batch_size = self.hyperparams_provider.get_min_batch_size(instruction['section'], asset)
+                    break
+            instruction['total_amount'] = min(min_batch_size, instruction['total_amount'])
+        return instructions

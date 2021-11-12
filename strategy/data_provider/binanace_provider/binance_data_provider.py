@@ -1,7 +1,6 @@
 import time
 from datetime import datetime
 from typing import Tuple
-
 from connectors import ConnectorRouter
 
 import connectors.exceptions
