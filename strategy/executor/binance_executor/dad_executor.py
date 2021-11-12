@@ -6,7 +6,7 @@ from strategy.translation import TranslateStrategyInstructions, TranslateLeverag
 from strategy.alpha import FundingAlpha
 from strategy.hyperparams import ProviderHyperParamsStrategy
 from strategy.risk_control import TelegramBot
-
+from strategy.risk_control import AccountPosition
 from strategy.executor.binance_executor.executor import BinanceExecutor
 
 logger = Logger('DadExecutor').create()
@@ -23,7 +23,9 @@ class DadExecutor:
         self.hyperparams_provider = ProviderHyperParamsStrategy()
 
     def execute(self):
+        account_info = AccountPosition(self.data_provider_usdt_m, self.data_provider_coin_m)
         while True:
+            account_info.control()
             executor_instructions = self._generate_instructions()
             logger.info(msg='Executor instructions: ', extra=dict(executor_instructions=executor_instructions))
             batches = self._generate_batches(executor_instructions)

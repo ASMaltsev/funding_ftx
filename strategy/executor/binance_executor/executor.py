@@ -84,7 +84,8 @@ class BinanceExecutor(AbstractExecutor):
             logger.error(msg='Delta positions > 0. Stopped.', extra=dict(delta=delta))
             self.check_positions()
 
-    def _get_limit_amount(self, ticker: str) -> float:
+    @staticmethod
+    def get_limit_amount(ticker: str) -> float:
         """
         @param ticker: pair name
         @return: amount for one limit order
