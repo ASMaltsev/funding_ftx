@@ -25,6 +25,7 @@ class BinanceExecutor(AbstractExecutor):
         self.total_amount = total_amount
         self.reduce_only = reduce_only
         self.current_amount_qty = 0
+        self.precision = None
 
     def _work_before_new_limit_order(self):
         logger.info(msg=colored('Rate limits:', 'blue'),
@@ -36,15 +37,16 @@ class BinanceExecutor(AbstractExecutor):
         max_coef_delta = 1.2
         self.data_provider.cancel_all_orders(self.limit_ticker)
         self.data_provider.cancel_all_orders(self.market_ticker)
-        pos_limit_side = self.data_provider.get_amount_positions(self.limit_ticker)
-        pos_market_side = self.data_provider.get_amount_positions(self.market_ticker)
+        pos_limit_side = round(self.data_provider.get_amount_positions(self.limit_ticker), self.precision)
+        pos_market_side = round(self.data_provider.get_amount_positions(self.market_ticker), self.precision)
+
         logger.info(msg=colored('Control positions.', 'green'),
                     extra=dict(pos_market_side=pos_market_side, pos_limit_side=pos_limit_side))
 
-        current_position_limit = round(pos_limit_side - self.start_amount_limit, 5)
-        current_position_market = round(pos_market_side - self.start_amount_market, 5)
+        current_position_limit = round(pos_limit_side - self.start_amount_limit, self.precision)
+        current_position_market = round(pos_market_side - self.start_amount_market, self.precision)
 
-        delta = round(abs(current_position_limit) - abs(current_position_market), 4)
+        delta = round(abs(current_position_limit) - abs(current_position_market), self.precision)
         logger.info(msg=f'CHECK POSITION.', extra=dict(delta=delta))
         limit_amount = self._get_limit_amount(self.limit_ticker)
         if 0 < delta <= max_coef_delta * limit_amount:
@@ -105,10 +107,10 @@ class BinanceExecutor(AbstractExecutor):
             prev_executed_qty = 0
             min_size_market_order = self.data_provider.min_size_for_market_order(ticker=self.market_ticker)
 
-            precision = abs(str(min_size_market_order).find('.') - len(str(min_size_market_order))) + 1
+            self.precision = abs(str(min_size_market_order).find('.') - len(str(min_size_market_order))) + 1
             limit_qty = round(
                 min(self._get_limit_amount(ticker=self.limit_ticker), self.total_amount - self.current_amount_qty),
-                precision)
+                self.precision)
             # logger.info('Sleeping 60 sec for revocation RPC...')
             # time.sleep(60)
 
@@ -118,7 +120,7 @@ class BinanceExecutor(AbstractExecutor):
                                    limit_side=self.limit_side, total_amount=self.total_amount,
                                    reduce_only=self.reduce_only,
                                    start_amount_limit=self.start_amount_limit,
-                                   start_amount_market=self.start_amount_market, precision=precision))
+                                   start_amount_market=self.start_amount_market, precision=self.precision))
 
             self._work_before_new_limit_order()
             order_status, order_id, price_limit_order, executed_qty = self.data_provider.make_safety_limit_order(
@@ -129,7 +131,7 @@ class BinanceExecutor(AbstractExecutor):
 
             while True:
 
-                delta = round(executed_qty - prev_executed_qty, precision)
+                delta = round(executed_qty - prev_executed_qty, self.precision)
                 prev_executed_qty = executed_qty
 
                 if order_status == 'FILLED':
@@ -140,7 +142,7 @@ class BinanceExecutor(AbstractExecutor):
                     self.current_amount_qty += delta
                     limit_qty = round(min(self._get_limit_amount(ticker=self.limit_ticker),
                                           self.total_amount - self.current_amount_qty),
-                                      precision)
+                                      self.precision)
 
                     if limit_qty == 0:
                         self.check_positions()
@@ -176,7 +178,7 @@ class BinanceExecutor(AbstractExecutor):
                         order_status, executed_qty = self.data_provider.get_order_status(ticker=self.limit_ticker,
                                                                                          order_id=order_id)
 
-                        delta = round(executed_qty - prev_executed_qty, precision)
+                        delta = round(executed_qty - prev_executed_qty, self.precision)
                         logger.info(msg='Params canceled orders',
                                     extra=dict(order_status=order_status, executed_qty=executed_qty, delta=delta,
                                                is_cancel=is_cancel, order_id=order_id))
@@ -189,7 +191,7 @@ class BinanceExecutor(AbstractExecutor):
                             self.current_amount_qty += delta
                             limit_qty = round(
                                 min(self._get_limit_amount(ticker=self.limit_ticker),
-                                    self.total_amount - self.current_amount_qty), precision)
+                                    self.total_amount - self.current_amount_qty), self.precision)
                             if limit_qty == 0:
                                 self.check_positions()
                                 logger.info(msg='Finished.')
