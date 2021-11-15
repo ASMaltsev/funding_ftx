@@ -36,21 +36,21 @@ strategy_hyperparams = {
                 },
             'assets':
                 {
-                    'ETH':
-                        {
-                            'perp': 'ETHUSD_PERP',
-                            'current': 'ETHUSD_211231',
-                            'next': 'ETHUSD_220325',
-                            'min_batch_size': 10,
-                        },
-                    'BTC':
-
-                        {
-                            'perp': 'BTCUSD_PERP',
-                            'current': 'BTCUSD_211231',
-                            'next': 'BTCUSD_220325',
-                            'min_batch_size': 5,
-                        }
+                    # 'ETH':
+                    #     {
+                    #         'perp': 'ETHUSD_PERP',
+                    #         'current': 'ETHUSD_211231',
+                    #         'next': 'ETHUSD_220325',
+                    #         'min_batch_size': 10,
+                    #     },
+                    # 'BTC':
+                    #
+                    #     {
+                    #         'perp': 'BTCUSD_PERP',
+                    #         'current': 'BTCUSD_211231',
+                    #         'next': 'BTCUSD_220325',
+                    #         'min_batch_size': 5,
+                    #     }
                 }
         }
 }
@@ -58,10 +58,10 @@ strategy_hyperparams = {
 account_hyperparams = {
     'USDT-M':
         {
-            'leverage_max': 3,
+            'leverage_max': 4,
         },
     'COIN-M':
         {
-            'leverage_max': 3,
+            'leverage_max': 4,
         }
 }
