@@ -98,7 +98,7 @@ class BinanceExecutor(AbstractExecutor):
         elif ticker.startswith('BTCUSD'):
             return 1
         elif ticker.startswith('ETHUSD'):
-            return 1
+            return 2
         elif ticker.startswith('BNBUSD'):
             return 10
         raise NotImplementedError
