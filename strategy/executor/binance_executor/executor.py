@@ -49,7 +49,7 @@ class BinanceExecutor(AbstractExecutor):
 
         delta = round(abs(current_position_limit) - abs(current_position_market), self.precision)
         logger.info(msg=f'CHECK POSITION.', extra=dict(delta=delta))
-        limit_amount = self._get_limit_amount(self.limit_ticker)
+        limit_amount = self.get_limit_amount(self.limit_ticker)
         if 0 < delta <= max_coef_delta * limit_amount:
             self.data_provider.make_safety_market_order(ticker=self.market_ticker,
                                                         side=self.market_side,
@@ -112,7 +112,7 @@ class BinanceExecutor(AbstractExecutor):
 
             self.precision = abs(str(min_size_market_order).find('.') - len(str(min_size_market_order))) + 1
             limit_qty = round(
-                min(self._get_limit_amount(ticker=self.limit_ticker), self.total_amount - self.current_amount_qty),
+                min(self.get_limit_amount(ticker=self.limit_ticker), self.total_amount - self.current_amount_qty),
                 self.precision)
             # logger.info('Sleeping 60 sec for revocation RPC...')
             # time.sleep(60)
@@ -143,7 +143,7 @@ class BinanceExecutor(AbstractExecutor):
                                                                 quantity=delta,
                                                                 min_size_order=min_size_market_order)
                     self.current_amount_qty += delta
-                    limit_qty = round(min(self._get_limit_amount(ticker=self.limit_ticker),
+                    limit_qty = round(min(self.get_limit_amount(ticker=self.limit_ticker),
                                           self.total_amount - self.current_amount_qty),
                                       self.precision)
 
@@ -193,7 +193,7 @@ class BinanceExecutor(AbstractExecutor):
                                                                         min_size_order=min_size_market_order)
                             self.current_amount_qty += delta
                             limit_qty = round(
-                                min(self._get_limit_amount(ticker=self.limit_ticker),
+                                min(self.get_limit_amount(ticker=self.limit_ticker),
                                     self.total_amount - self.current_amount_qty), self.precision)
                             if limit_qty == 0:
                                 self.check_positions()
