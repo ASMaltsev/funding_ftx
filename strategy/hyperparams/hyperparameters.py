@@ -13,18 +13,18 @@ strategy_hyperparams = {
                 },
             'assets':
                 {
-                    'ETH':
-                        {
-                            'perp': 'ETHUSDT',
-                            'quart': 'ETHUSDT_211231',
-                            'min_batch_size': 2,
-                        },
-                    'BTC':
-                        {
-                            'perp': 'BTCUSDT',
-                            'quart': 'BTCUSDT_211231',
-                            'min_batch_size': 1,
-                        },
+                    # 'ETH':
+                    #     {
+                    #         'perp': 'ETHUSDT',
+                    #         'quart': 'ETHUSDT_211231',
+                    #         'min_batch_size': 2,
+                    #     },
+                    # 'BTC':
+                    #     {
+                    #         'perp': 'BTCUSDT',
+                    #         'quart': 'BTCUSDT_211231',
+                    #         'min_batch_size': 1,
+                    #     },
                 }
         },
     'COIN-M':
@@ -36,13 +36,13 @@ strategy_hyperparams = {
                 },
             'assets':
                 {
-                    # 'ETH':
-                    #     {
-                    #         'perp': 'ETHUSD_PERP',
-                    #         'current': 'ETHUSD_211231',
-                    #         'next': 'ETHUSD_220325',
-                    #         'min_batch_size': 10,
-                    #     },
+                    'ETH':
+                        {
+                            'perp': 'ETHUSD_PERP',
+                            'current': 'ETHUSD_211231',
+                            'next': 'ETHUSD_220325',
+                            'min_batch_size': 3,
+                        },
                     # 'BTC':
                     #
                     #     {
