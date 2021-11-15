@@ -91,11 +91,11 @@ class BinanceExecutor(AbstractExecutor):
         @return: amount for one limit order
         """
         if ticker.startswith('BTCUSDT'):
-            return 0.002
+            return 0.001
         elif ticker.startswith('ETHUSDT'):
-            return 0.03
+            return 0.02
         elif ticker.startswith('BTCUSD'):
-            return 2
+            return 1
         elif ticker.startswith('ETHUSD'):
             return 1
         elif ticker.startswith('BNBUSD'):
