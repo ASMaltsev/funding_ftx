@@ -36,7 +36,7 @@ class DadExecutor:
                 batches = self._generate_batches(executor_instructions)
                 logger.info(msg='Batches: ', extra=dict(batches=batches))
                 for batch in batches:
-                    BinanceExecutor(self.api_key, self.secret_key, **batch).price()
+                    BinanceExecutor(self.api_key, self.secret_key, **batch).execute()
 
     def _generate_instructions(self):
         instructions = FundingAlpha().decide()
