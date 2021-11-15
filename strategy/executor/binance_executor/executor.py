@@ -3,6 +3,7 @@ import time
 import sys
 import requests
 from strategy.executor.abstract_executor import AbstractExecutor
+from strategy.data_provider import BinanceDataProvider
 from strategy.logging import Logger, send_log
 
 my_logger = Logger('Executor')
@@ -11,10 +12,10 @@ logger = my_logger.create()
 
 class BinanceExecutor(AbstractExecutor):
 
-    def __init__(self, data_provider, market_ticker: str, limit_ticker: str,
+    def __init__(self, api_key: str, secret_key: str, section: str, market_ticker: str, limit_ticker: str,
                  limit_side: str, market_side: str, total_amount: float, reduce_only: bool):
 
-        self.data_provider = data_provider
+        self.data_provider = BinanceDataProvider(section=section, api_key=api_key, secret_key=secret_key)
 
         self.start_amount_limit = 0
         self.start_amount_market = 0
@@ -220,3 +221,9 @@ class BinanceExecutor(AbstractExecutor):
             self.execute()
         finally:
             send_log()
+
+    def __del__(self):
+        try:
+            self.data_provider.ws.loop.stop()
+        except RuntimeError as e:
+            logger.warning(msg=e)

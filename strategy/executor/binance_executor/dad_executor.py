@@ -36,9 +36,7 @@ class DadExecutor:
                 batches = self._generate_batches(executor_instructions)
                 logger.info(msg='Batches: ', extra=dict(batches=batches))
                 for batch in batches:
-                    provider = self.data_provider_usdt_m if batch['section'] == 'USDT-M' else self.data_provider_coin_m
-                    del batch['section']
-                    BinanceExecutor(provider, **batch).execute()
+                    BinanceExecutor(self.api_key, self.secret_key, **batch).price()
 
     def _generate_instructions(self):
         instructions = FundingAlpha().decide()
