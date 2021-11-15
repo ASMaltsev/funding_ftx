@@ -10,8 +10,8 @@ import time
 class TelegramBot:
 
     def __init__(self):
-        self.token = '2098325312:AAFrwnuX1JeBBd1i8KjXUyXCvYgw8g-3__I'
-        self.chat_id = -725423248
+        self.token = '2118072648:AAGqx1UQnzH-amupBMfGagwrwSeGTvec4jk'
+        self.chat_id = -609260691
         self.bot = telebot.TeleBot(self.token, threaded=False)
         self.flag = False
 
