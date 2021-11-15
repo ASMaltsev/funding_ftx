@@ -67,9 +67,17 @@ class ProviderHyperParamsStrategy:
     def get_min_batch_size(section: str, asset: str) -> float:
         return float(strategy_hyperparams[section]['assets'][asset]['min_batch_size'])
 
+    @staticmethod
+    def get_sections() -> list:
+        return list(set(strategy_hyperparams.keys()).intersection({'USDT-M', 'COIN-M'}))
+
 
 class AccountHyperParams:
 
     @staticmethod
     def get_max_leverage(section):
         return account_hyperparams[section]['leverage_max']
+
+    @staticmethod
+    def get_max_ignore(section):
+        return account_hyperparams[section]['max_ignore']
