@@ -26,11 +26,14 @@ class DadExecutor:
 
     def execute(self):
         account_info = AccountPosition(self.data_provider_usdt_m, self.data_provider_coin_m)
+        send_message = True
         while True:
             account_info.control()
-            executor_instructions = self._generate_instructions()
+            executor_instructions = self._generate_instructions(send_message=send_message)
+            send_message = False
             if len(executor_instructions) == 0:
                 time.sleep(120)
+                send_message = True
             else:
                 logger.info(msg='Executor instructions: ', extra=dict(executor_instructions=executor_instructions))
                 batches = self._generate_batches(executor_instructions)
@@ -38,7 +41,7 @@ class DadExecutor:
                 for batch in batches:
                     BinanceExecutor(self.api_key, self.secret_key, **batch).execute()
 
-    def _generate_instructions(self):
+    def _generate_instructions(self, send_message):
         instructions = FundingAlpha().decide()
         logger.info(msg='Strategy instructions: ', extra=dict(instructions=instructions))
         strategy_instructions = TranslateStrategyInstructions(self.data_provider_usdt_m,
@@ -81,8 +84,9 @@ class DadExecutor:
                 final_instructions.append(pre_final_instruction.copy())
 
         logger.info(msg='Final instructions:', extra=dict(final_instructions=final_instructions))
-        self.control_strategy(final_instructions=final_instructions,
-                              real_positions={**real_position_perp, **real_position_quart})
+        if send_message:
+            self.control_strategy(final_instructions=final_instructions,
+                                  real_positions={**real_position_perp, **real_position_quart})
         return final_instructions
 
     @staticmethod
