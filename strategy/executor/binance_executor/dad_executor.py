@@ -37,8 +37,7 @@ class DadExecutor:
                 logger.info(msg='Batches: ', extra=dict(batches=batches))
                 for batch in batches:
                     del batch['section']
-                    print(batch)
-                    # BinanceExecutor(self.data_provider_coin_m, **batch).execute()
+                    BinanceExecutor(self.data_provider_coin_m, **batch).execute()
 
     def _generate_instructions(self):
         instructions = FundingAlpha().decide()
