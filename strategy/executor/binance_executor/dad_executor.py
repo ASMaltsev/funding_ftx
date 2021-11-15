@@ -1,4 +1,6 @@
 import sys
+import time
+
 from strategy.data_provider.binanace_provider.binance_data_provider import BinanceDataProvider
 from strategy.logging import Logger
 from strategy.risk_control import RealStatePositions, Rebalancer
@@ -33,7 +35,7 @@ class DadExecutor:
             for batch in batches:
                 del batch['section']
                 BinanceExecutor(self.data_provider_coin_m, **batch).execute()
-            break
+            time.sleep(120)
 
     def _generate_instructions(self):
         instructions = FundingAlpha().decide()
