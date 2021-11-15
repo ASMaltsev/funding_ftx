@@ -23,7 +23,7 @@ strategy_hyperparams = {
                         {
                             'perp': 'BTCUSDT',
                             'quart': 'BTCUSDT_211231',
-                            'min_batch_size': 0.05,
+                            'min_batch_size': 0.03,
                         },
                 }
         },
