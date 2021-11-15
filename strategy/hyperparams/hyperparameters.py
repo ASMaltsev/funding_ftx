@@ -8,31 +8,31 @@ strategy_hyperparams = {
         {
             'share':
                 {
-                    'BTC': 0.4,
-                    'ETH': 0.6
+                    'BTC': 0.375,
+                    'ETH': 0.575
                 },
             'assets':
                 {
-                    # 'ETH':
-                    #     {
-                    #         'perp': 'ETHUSDT',
-                    #         'quart': 'ETHUSDT_211231',
-                    #         'min_batch_size': 2,
-                    #     },
-                    # 'BTC':
-                    #     {
-                    #         'perp': 'BTCUSDT',
-                    #         'quart': 'BTCUSDT_211231',
-                    #         'min_batch_size': 1,
-                    #     },
+                    'ETH':
+                        {
+                            'perp': 'ETHUSDT',
+                            'quart': 'ETHUSDT_211231',
+                            'min_batch_size': 2,
+                        },
+                    'BTC':
+                        {
+                            'perp': 'BTCUSDT',
+                            'quart': 'BTCUSDT_211231',
+                            'min_batch_size': 1,
+                        },
                 }
         },
     'COIN-M':
         {
             'share':
                 {
-                    'current': 0.5,
-                    'next': 0.5
+                    'current': 0.475,
+                    'next': 0.475
                 },
             'assets':
                 {
@@ -43,14 +43,14 @@ strategy_hyperparams = {
                             'next': 'ETHUSD_220325',
                             'min_batch_size': 10,
                         },
-                    # 'BTC':
-                    #
-                    #     {
-                    #         'perp': 'BTCUSD_PERP',
-                    #         'current': 'BTCUSD_211231',
-                    #         'next': 'BTCUSD_220325',
-                    #         'min_batch_size': 5,
-                    #     }
+                    'BTC':
+
+                        {
+                            'perp': 'BTCUSD_PERP',
+                            'current': 'BTCUSD_211231',
+                            'next': 'BTCUSD_220325',
+                            'min_batch_size': 5,
+                        }
                 }
         }
 }
