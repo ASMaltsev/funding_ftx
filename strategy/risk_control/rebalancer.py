@@ -16,7 +16,12 @@ class Rebalancer:
         self.safety_coef = 0.05
 
     def analyze_account(self) -> dict:
-        return {'USDT-M': self._analyze_account_usdt_m(), 'COIN-M': self._analyze_account_coin_m()}
+        res = {}
+        if 'USDT-M' in self.provider_hyperparams_strategy.get_sections():
+            res.update({'USDT-M': self._analyze_account_usdt_m()})
+        if 'COIN-M' in self.provider_hyperparams_strategy.get_sections():
+            res.update({'COIN-M': self._analyze_account_coin_m()})
+        return res
 
     def _analyze_account_coin_m(self):
         section = 'COIN-M'
@@ -54,10 +59,13 @@ class Rebalancer:
                                                                                     kind='current')
             next_ticker = self.provider_hyperparams_strategy.get_ticker_by_asset(section=section, asset=asset,
                                                                                  kind='next')
-
-            result[asset] = max(0, round(self._get_amount_ticker_coin_m(leverage=leverage_df.loc[asset, 'delta'],
-                                                                        twb=total_balance[asset], ticker_1=perp_ticker,
-                                                                        ticker_2=current_ticker, ticker_3=next_ticker),
+            leverage = 0 if leverage_df.loc[asset, 'delta'] < self.provider_hyperparams_account.get_max_ignore(
+                section=section) else leverage_df.loc[asset, 'delta']
+            result[asset] = max(0, round(self._get_amount_ticker_coin_m(leverage=leverage,
+                                                                        twb=total_balance[asset],
+                                                                        ticker_1=perp_ticker,
+                                                                        ticker_2=current_ticker,
+                                                                        ticker_3=next_ticker),
                                          0))
         logger.info(msg='COIN-M leverages info:', extra=dict(leverage_df=leverage_df, result=result))
         return result
@@ -92,7 +100,9 @@ class Rebalancer:
         leverage_df = leverage_df.astype(float)
         type_contract = leverage_df.sum(axis=1).abs().nlargest(1).index.values[0]
         delta = abs(leverage_df.loc[type_contract].sum()) - account_max_leverage
-        if delta < 0:
+        delta = 0 if delta < self.provider_hyperparams_account.get_max_ignore(section=section) else delta
+
+        if delta <= 0:
             return {asset: 0.0 for asset in assets}
 
         close_series = leverage_df.loc[type_contract].copy()

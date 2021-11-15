@@ -29,13 +29,16 @@ class DadExecutor:
         while True:
             account_info.control()
             executor_instructions = self._generate_instructions()
-            logger.info(msg='Executor instructions: ', extra=dict(executor_instructions=executor_instructions))
-            batches = self._generate_batches(executor_instructions)
-            logger.info(msg='Batches: ', extra=dict(batches=batches))
-            for batch in batches:
-                del batch['section']
-                BinanceExecutor(self.data_provider_coin_m, **batch).execute()
-            time.sleep(120)
+            if len(executor_instructions) == 0:
+                time.sleep(120)
+            else:
+                logger.info(msg='Executor instructions: ', extra=dict(executor_instructions=executor_instructions))
+                batches = self._generate_batches(executor_instructions)
+                logger.info(msg='Batches: ', extra=dict(batches=batches))
+                for batch in batches:
+                    del batch['section']
+                    print(batch)
+                    # BinanceExecutor(self.data_provider_coin_m, **batch).execute()
 
     def _generate_instructions(self):
         instructions = FundingAlpha().decide()
@@ -86,14 +89,15 @@ class DadExecutor:
 
     @staticmethod
     def control_strategy(final_instructions, real_positions):
-        bot = TelegramBot()
-        continue_work = bot.start(final_instructions=final_instructions,
-                                  real_positions=real_positions)
-        if continue_work:
-            bot.send_message('OK')
-        else:
-            bot.send_message('STOP')
-            sys.exit(0)
+        if len(final_instructions) > 0:
+            bot = TelegramBot()
+            continue_work = bot.start(final_instructions=final_instructions,
+                                      real_positions=real_positions)
+            if continue_work:
+                bot.send_message('OK')
+            else:
+                bot.send_message('STOP')
+                sys.exit(0)
 
     @staticmethod
     def _correction_strategy_position(strategy_positions, real_quart_positions):

@@ -13,18 +13,18 @@ strategy_hyperparams = {
                 },
             'assets':
                 {
-                    # 'ETH':
-                    #     {
-                    #         'perp': 'ETHUSDT',
-                    #         'quart': 'ETHUSDT_211231',
-                    #         'min_batch_size': 2,
-                    #     },
-                    # 'BTC':
-                    #     {
-                    #         'perp': 'BTCUSDT',
-                    #         'quart': 'BTCUSDT_211231',
-                    #         'min_batch_size': 1,
-                    #     },
+                    'ETH':
+                        {
+                            'perp': 'ETHUSDT',
+                            'quart': 'ETHUSDT_211231',
+                            'min_batch_size': 2,
+                        },
+                    'BTC':
+                        {
+                            'perp': 'BTCUSDT',
+                            'quart': 'BTCUSDT_211231',
+                            'min_batch_size': 1,
+                        },
                 }
         },
     'COIN-M':
@@ -43,14 +43,14 @@ strategy_hyperparams = {
                             'next': 'ETHUSD_220325',
                             'min_batch_size': 3,
                         },
-                    # 'BTC':
-                    #
-                    #     {
-                    #         'perp': 'BTCUSD_PERP',
-                    #         'current': 'BTCUSD_211231',
-                    #         'next': 'BTCUSD_220325',
-                    #         'min_batch_size': 5,
-                    #     }
+                    'BTC':
+
+                        {
+                            'perp': 'BTCUSD_PERP',
+                            'current': 'BTCUSD_211231',
+                            'next': 'BTCUSD_220325',
+                            'min_batch_size': 5,
+                        }
                 }
         }
 }
@@ -59,9 +59,11 @@ account_hyperparams = {
     'USDT-M':
         {
             'leverage_max': 4,
+            'max_ignore': 0.2,
         },
     'COIN-M':
         {
             'leverage_max': 4,
+            'max_ignore': 0.2,
         }
 }
