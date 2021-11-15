@@ -25,8 +25,8 @@ strategy_hyperparams = {
     #                         'quart': 'BTCUSDT_211231',
     #                         'min_batch_size': 0.03,
     #                     },
-                }
-        },
+    #             }
+    #     },
     'COIN-M':
         {
             'share':
