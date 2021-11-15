@@ -84,7 +84,7 @@ class DadExecutor:
                 final_instructions.append(pre_final_instruction.copy())
 
         logger.info(msg='Final instructions:', extra=dict(final_instructions=final_instructions))
-        if send_message:
+        if send_message and len(final_instructions) > 0:
             self.control_strategy(final_instructions=final_instructions,
                                   real_positions={**real_position_perp, **real_position_quart})
         return final_instructions
