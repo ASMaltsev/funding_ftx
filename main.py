@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from strategy.executor import DadExecutor
 from strategy.others import API_KEY, SECRET_KEY
 
