@@ -1,8 +1,4 @@
 from strategy.executor import DadExecutor
+from strategy.others import API_KEY, SECRET_KEY
 
-# # TEST API
-api_key = 'IdPorsZNdskqCUNbO5aN0w6TY67Kfl0syZjHDV3ZP9tOMuM6k3KzovNizMKmBpix'
-secret_key = '7qE1lC0fVpNF7i9Lb08odC1HaV6m2LILmzy2SSEnAXTwqOVaJhqA8cVz1tzPzP0A'
-
-
-DadExecutor(api_key=api_key, secret_key=secret_key).execute()
+DadExecutor(api_key=API_KEY, secret_key=SECRET_KEY).execute()

@@ -1,5 +1,6 @@
 import telebot
 import time
+from strategy.others import STATHAM_TOKEN, STATHAM_CHAT_ID
 
 
 # #INS
@@ -10,8 +11,8 @@ import time
 class TelegramBot:
 
     def __init__(self):
-        self.token = '2118072648:AAGqx1UQnzH-amupBMfGagwrwSeGTvec4jk'
-        self.chat_id = -609260691
+        self.token = STATHAM_TOKEN
+        self.chat_id = STATHAM_CHAT_ID
         self.bot = telebot.TeleBot(self.token, threaded=False)
         self.flag = False
 
