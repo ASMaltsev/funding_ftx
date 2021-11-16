@@ -32,7 +32,7 @@ class Rebalancer:
         for asset_info in account_info['tickers']:
             asset = asset_info['ticker']
             if asset in assets:
-                total_balance[asset] = asset_info['walletBalance']
+                total_balance[asset] = min(float(asset_info['walletBalance']), float(asset_info['marginBalance']))
         leverage_df = pd.DataFrame(index=assets, columns=['perp', 'current', 'next'])
         for asset in assets:
             perp_ticker = self.provider_hyperparams_strategy.get_ticker_by_asset(section=section, asset=asset,
@@ -81,7 +81,7 @@ class Rebalancer:
 
     def _analyze_account_usdt_m(self):
         account_info = self.data_provider_usdt_m.get_account_info()
-        total_wallet_balance = float(account_info['totalWalletBalance'])
+        total_wallet_balance = min(float(account_info['totalWalletBalance']), float(account_info['marginBalance']))
         section = 'USDT-M'
 
         account_max_leverage = self.provider_hyperparams_account.get_max_leverage(section=section)
