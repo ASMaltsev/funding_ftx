@@ -81,7 +81,8 @@ class Rebalancer:
 
     def _analyze_account_usdt_m(self):
         account_info = self.data_provider_usdt_m.get_account_info()
-        total_wallet_balance = min(float(account_info['totalWalletBalance']), float(account_info['marginBalance']))
+
+        total_wallet_balance = min(float(account_info['totalWalletBalance']), float(account_info['totalMarginBalance']))
         section = 'USDT-M'
 
         account_max_leverage = self.provider_hyperparams_account.get_max_leverage(section=section)
