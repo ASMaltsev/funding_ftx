@@ -1,12 +1,17 @@
 import telebot
-
 import signal
 import logging
 from datetime import datetime
+from strategy.others import CLIENT_NAME, D_TYPE, HOSTS
+from elasticsearch import Elasticsearch
 
-
-file_path = f'test_{datetime.utcnow().replace(microsecond=0, second=0)}.log'
+file_path = f'{CLIENT_NAME}_{datetime.utcnow().replace(microsecond=0, second=0)}.log'
 flag = False
+
+d_type = D_TYPE
+hosts = HOSTS
+
+es = Elasticsearch(hosts)
 
 
 def send_log():
@@ -32,11 +37,52 @@ class CustomAdapter(logging.LoggerAdapter):
 
     def process(self, msg, kwargs):
         dict_kwargs = kwargs.get('extra', '')
+        max_rpc = 0
+        current_rpc = 0
+        delta = 0
+        market_amount = 0
+        limit_amount = 0
         line_kwargs = ''
         if dict_kwargs != '':
             line_kwargs = ', '.join(map(str, [f'{k} = {v}' for k, v in dict_kwargs.items()]))
         line = '%s %s' % (msg, line_kwargs)
 
+        if msg == 'Rate limits:':
+            current_rpc = dict_kwargs['current_rpc']
+            max_rpc = dict_kwargs['max_rpc']
+        elif msg == 'CHECK POSITION.':
+            delta = dict_kwargs['delta']
+        elif msg == 'Current positions with correction on initial positions:':
+            limit_amount = dict_kwargs['limit_amount']
+            market_amount = dict_kwargs['market_amount']
+        elif msg == 'Current positions:':
+            limit_amount = dict_kwargs['limit_amount']
+            market_amount = dict_kwargs['market_amount']
+            delta = dict_kwargs['delta']
+
+        """
+          sending logs to grafana
+        """
+        robot = 'EXECUTOR'  # problems
+
+        if msg is None:
+            msg = 'empty'
+        if msg == '':
+            msg = 'empty'
+        doc = {
+            'timestamp': datetime.utcnow(),
+            'robot': robot,
+            'Msg': str(msg),
+            'body': line_kwargs,
+            'limit_amount': limit_amount,
+            'market_amount': market_amount,
+            'delta': delta,
+            'current_rpc': current_rpc,
+            'max_rpc': max_rpc,
+        }
+
+        index_name = 'docker_test'
+        es.index(index=index_name, doc_type=d_type, body=doc)  # doc_type - name container
         return line, kwargs
 
 
