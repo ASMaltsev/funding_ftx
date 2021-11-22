@@ -104,6 +104,8 @@ class DadExecutor:
                                                real_positions={**real_position_perp, **real_position_quart})
                 if phrase == 'skip':
                     time.sleep(5 * 60)
+            else:
+                phrase = ''
         return final_instructions
 
     @staticmethod
