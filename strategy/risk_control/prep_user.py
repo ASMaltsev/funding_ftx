@@ -1,21 +1,18 @@
-from strategy.others import API_KEY, SECRET_KEY
 from connectors import ConnectorRouter
+import time
 
+class Accaunt_set():
 
-class Accaunt_set(object):
-    """docstring for ."""
+    def __init__(self, api_key, secret_key):
 
-    def __init__(self, arg):
-        self.arg = arg
-
-
+        self.api_key = api_key
+        self.secret_key = secret_key
         self.connector_coin = ConnectorRouter(exchange='Binance', section='COIN-M').init_connector(api_key, secret_key)
         self.connector_usdt = ConnectorRouter(exchange='Binance', section='USDT-M').init_connector(api_key, secret_key)
 
 
 
-    def change_all_lev(lev, section='USDT-M'):
-
+    def change_all_lev(self, lev, section):
         client = self.connector_usdt if section == 'USDT-M' else self.connector_coin
         tickers = client.get_tickers()
         tickers = [i['ticker'] for i in tickers]
@@ -36,10 +33,23 @@ class Accaunt_set(object):
             else:
                 time.sleep(2)
 
-    def get_balances(section='USDT-M', symbols: list):
 
+    def get_balances(self, section, symbols: list):
         client = self.connector_usdt if section == 'USDT-M' else self.connector_coin
-        balances = client.get_balances()
+        balances = client.get_balances().items()
 
-        for b in balances:
-            if b.key()
+        for symbol, value in balances:
+            if symbol in symbols:
+                b = value['total']
+                print(f'{symbol}: {b}')
+
+
+    def get_positions(self, section):
+        client = self.connector_usdt if section == 'USDT-M' else self.connector_usdt
+        positions = client.get_positions()
+
+        for p in positions:
+            if p['positionAmt'] != 0:
+                ticker = p['ticker']
+                amount = p['positionAmt']
+                print(f'{ticker}: {amount}')
