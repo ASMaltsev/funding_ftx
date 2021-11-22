@@ -71,7 +71,8 @@ class BinanceDataProvider(AbstractExecutorDataProvider):
     def make_limit_order(self, ticker: str, side: str, price: float, quantity: float, reduce_only: bool) \
             -> Tuple[int, str]:
         if quantity > 0:
-            response = self.connector.make_limit_order(ticker=ticker, side=side.lower(), price=price, quantity=quantity,
+            response = self.connector.make_limit_order(ticker=ticker, side=side.lower(), price=price,
+                                                       quantity=quantity,
                                                        reduce_only=reduce_only)
             return int(response.get('orderId', None)), str(response.get('status', None))
         else:

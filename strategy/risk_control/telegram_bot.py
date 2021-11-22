@@ -14,7 +14,7 @@ class TelegramBot:
         self.token = STATHAM_TOKEN
         self.chat_id = STATHAM_CHAT_ID
         self.bot = telebot.TeleBot(self.token, threaded=False)
-        self.flag = False
+        self.flag = 0
 
     def start(self, final_instructions, real_positions):
 
@@ -24,10 +24,13 @@ class TelegramBot:
         @self.bot.message_handler(content_types=['text'])
         def go(message):
             if message.text == 'ok' and message.date > time.time() - 2:
-                self.flag = True
+                self.flag = 1
                 self.bot.stop_polling()
             if message.text == 'stop' and message.date > time.time() - 2:
-                self.flag = False
+                self.flag = 0
+                self.bot.stop_polling()
+            if message.text == 'skip' and message.date > time.time() - 2:
+                self.flag = 2
                 self.bot.stop_polling()
 
         self.bot.infinity_polling()

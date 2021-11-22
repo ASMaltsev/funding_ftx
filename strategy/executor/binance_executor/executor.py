@@ -28,13 +28,13 @@ class BinanceExecutor(AbstractExecutor):
         self.current_amount_qty = 0
         self.precision = None
 
-    def _work_before_new_limit_order(self):
+    def _work_before_new_limit_order(self, min_size_order):
         logger.info(msg=colored('Rate limits:', 'blue'),
                     extra=dict(current_rpc=self.data_provider.current_rpc, max_rpc=self.data_provider.max_rpc))
         self._control_rpc()
-        self._log_current_positions()
+        self._log_current_positions(min_size_order)
 
-    def check_positions(self):
+    def check_positions(self, min_size_order):
         time.sleep(0.2)
         max_coef_delta = 1.2
         self.data_provider.cancel_all_orders(self.limit_ticker)
@@ -54,11 +54,13 @@ class BinanceExecutor(AbstractExecutor):
         if 0 < delta <= max_coef_delta * limit_amount:
             self.data_provider.make_safety_market_order(ticker=self.market_ticker,
                                                         side=self.market_side,
-                                                        quantity=delta)
+                                                        quantity=delta,
+                                                        min_size_order=min_size_order)
         elif delta < 0 and abs(delta) <= max_coef_delta * limit_amount:
             self.data_provider.make_safety_market_order(ticker=self.market_ticker,
                                                         side=self.market_side,
-                                                        quantity=abs(delta))
+                                                        quantity=abs(delta),
+                                                        min_size_order=min_size_order)
         elif delta == 0:
             pass
         else:
@@ -69,7 +71,7 @@ class BinanceExecutor(AbstractExecutor):
         if self.data_provider.warning_rpc:
             time.sleep(30)
 
-    def _log_current_positions(self):
+    def _log_current_positions(self, min_size_order):
         time.sleep(0.2)
         limit_amount = self.data_provider.get_amount_positions(self.limit_ticker)
         market_amount = self.data_provider.get_amount_positions(self.market_ticker)
@@ -83,7 +85,7 @@ class BinanceExecutor(AbstractExecutor):
                                delta=delta))
         if delta > 0:
             logger.error(msg='Delta positions > 0. Stopped.', extra=dict(delta=delta))
-            self.check_positions()
+            self.check_positions(min_size_order)
 
     @staticmethod
     def get_limit_amount(ticker: str) -> float:
@@ -103,6 +105,24 @@ class BinanceExecutor(AbstractExecutor):
             return 10
         raise NotImplementedError
 
+    @staticmethod
+    def get_precision(ticker: str) -> int:
+        """
+        @param ticker: pair name
+        @return: amount for one limit order
+        """
+        if ticker.startswith('BTCUSDT'):
+            return 3
+        elif ticker.startswith('ETHUSDT'):
+            return 2
+        elif ticker.startswith('BTCUSD'):
+            return 0
+        elif ticker.startswith('ETHUSD'):
+            return 0
+        elif ticker.startswith('BNBUSD'):
+            return 0
+        raise NotImplementedError
+
     def execute(self) -> bool:
         try:
             self.start_amount_limit = self.data_provider.get_amount_positions(self.limit_ticker)
@@ -111,7 +131,8 @@ class BinanceExecutor(AbstractExecutor):
             prev_executed_qty = 0
             min_size_market_order = self.data_provider.min_size_for_market_order(ticker=self.market_ticker)
 
-            self.precision = abs(str(min_size_market_order).find('.') - len(str(min_size_market_order))) + 1
+            self.precision = self.get_precision(self.limit_ticker)
+
             limit_qty = round(
                 min(self.get_limit_amount(ticker=self.limit_ticker), self.total_amount - self.current_amount_qty),
                 self.precision)
@@ -126,7 +147,7 @@ class BinanceExecutor(AbstractExecutor):
                                    start_amount_limit=self.start_amount_limit,
                                    start_amount_market=self.start_amount_market, precision=self.precision))
 
-            self._work_before_new_limit_order()
+            self._work_before_new_limit_order(min_size_market_order)
             order_status, order_id, price_limit_order, executed_qty = self.data_provider.make_safety_limit_order(
                 ticker=self.limit_ticker,
                 side=self.limit_side,
@@ -149,13 +170,13 @@ class BinanceExecutor(AbstractExecutor):
                                       self.precision)
 
                     if limit_qty == 0:
-                        self.check_positions()
+                        self.check_positions(min_size_market_order)
                         logger.info(msg='Finished.')
                         break
 
                     prev_executed_qty = 0
 
-                    self._work_before_new_limit_order()
+                    self._work_before_new_limit_order(min_size_market_order)
                     order_status, order_id, price_limit_order, executed_qty = self.data_provider. \
                         make_safety_limit_order(ticker=self.limit_ticker,
                                                 side=self.limit_side,
@@ -197,13 +218,13 @@ class BinanceExecutor(AbstractExecutor):
                                 min(self.get_limit_amount(ticker=self.limit_ticker),
                                     self.total_amount - self.current_amount_qty), self.precision)
                             if limit_qty == 0:
-                                self.check_positions()
+                                self.check_positions(min_size_market_order)
                                 logger.info(msg='Finished.')
                                 break
 
                             prev_executed_qty = 0
 
-                            self._work_before_new_limit_order()
+                            self._work_before_new_limit_order(min_size_market_order)
                             order_status, order_id, price_limit_order, executed_qty = \
                                 self.data_provider.make_safety_limit_order(ticker=self.limit_ticker,
                                                                            side=self.limit_side,
@@ -215,15 +236,17 @@ class BinanceExecutor(AbstractExecutor):
             return True
         except requests.ConnectionError as e:
             logger.error(msg=str(e))
+            min_size_market_order = self.data_provider.min_size_for_market_order(ticker=self.market_ticker)
             self.total_amount -= self.current_amount_qty
             self.current_amount_qty = 0
-            self.check_positions()
+            self.check_positions(min_size_market_order)
             self.execute()
         finally:
             send_log()
 
     def __del__(self):
         try:
+            self.data_provider.ws.ws.close()
             self.data_provider.ws.loop.stop()
         except RuntimeError as e:
             logger.warning(msg=e)

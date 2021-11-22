@@ -1,6 +1,5 @@
 import sys
 import time
-
 from strategy.data_provider.binanace_provider.binance_data_provider import BinanceDataProvider
 from strategy.logging import Logger
 from strategy.risk_control import RealStatePositions, Rebalancer
@@ -10,6 +9,7 @@ from strategy.hyperparams import ProviderHyperParamsStrategy
 from strategy.risk_control import TelegramBot
 from strategy.risk_control import AccountPosition
 from strategy.executor.binance_executor.executor import BinanceExecutor
+from strategy.translation import GeneratePosition
 
 logger = Logger('DadExecutor').create()
 
@@ -36,57 +36,74 @@ class DadExecutor:
                 send_message = True
             else:
                 logger.info(msg='Executor instructions: ', extra=dict(executor_instructions=executor_instructions))
-                batches = self._generate_batches(executor_instructions)
+                phrase, batches = self._generate_batches(executor_instructions)
                 logger.info(msg='Batches: ', extra=dict(batches=batches))
                 for batch in batches:
                     BinanceExecutor(self.api_key, self.secret_key, **batch).execute()
 
     def _generate_instructions(self, send_message):
-        instructions = FundingAlpha().decide()
-        logger.info(msg='Strategy instructions: ', extra=dict(instructions=instructions))
-        strategy_instructions = TranslateStrategyInstructions(self.data_provider_usdt_m,
-                                                              self.data_provider_coin_m).parse(instructions)
-
-        logger.info(msg='Update strategy instructions:', extra=dict(strategy_instructions=strategy_instructions))
-
-        real_position_quart, real_position_perp = RealStatePositions(data_provider_usdt_m=self.data_provider_usdt_m,
-                                                                     data_provider_coin_m=self.data_provider_coin_m) \
-            .get_positions()
-
-        logger.info(msg='Real positions:',
-                    extra=dict(real_position_quart=real_position_quart, real_position_perp=real_position_perp))
-
-        update_instructions = self._correction_strategy_position(strategy_instructions, real_position_quart)
-
-        logger.info(msg='Adjusted positions:', extra=dict(instructions=update_instructions))
-
-        rebalancer_instructions = Rebalancer(data_provider_usdt_m=self.data_provider_usdt_m,
-                                             data_provider_coin_m=self.data_provider_coin_m).analyze_account()
-
-        logger.info(msg='Rebalancer instructions:', extra=dict(rebalancer_instructions=rebalancer_instructions))
-
-        close_positions = TranslateLeverage(
-            data_provider_usdt_m=self.data_provider_usdt_m,
-            data_provider_coin_m=self.data_provider_coin_m).translate(rebalancer_instructions)
-
-        logger.info(msg='Close positions:', extra=dict(close_positions=close_positions))
-
-        pre_final_instructions = self._union_instructions(update_instructions, close_positions)
-        logger.info(msg='Pre final instructions:', extra=dict(pre_final_instructions=pre_final_instructions))
-
+        phrase = 'skip'
         final_instructions = []
-        for pre_final_instruction in pre_final_instructions:
-            if pre_final_instruction['total_amount'] > 0:
-                try:
-                    del pre_final_instruction['strategy_section']
-                except KeyError:
-                    pass
-                final_instructions.append(pre_final_instruction.copy())
+        while phrase == 'skip':
+            instructions = FundingAlpha().decide()
+            logger.info(msg='Strategy instructions:', extra=dict(instructions=instructions))
 
-        logger.info(msg='Final instructions:', extra=dict(final_instructions=final_instructions))
-        if send_message and len(final_instructions) > 0:
-            self.control_strategy(final_instructions=final_instructions,
-                                  real_positions={**real_position_perp, **real_position_quart})
+            strategy_instructions = TranslateStrategyInstructions(self.data_provider_usdt_m,
+                                                                  self.data_provider_coin_m).parse(instructions)
+
+            logger.info(msg='Translate strategy instructions:', extra=dict(strategy_instructions=strategy_instructions))
+
+            real_position_quart, real_position_perp = RealStatePositions(data_provider_usdt_m=self.data_provider_usdt_m,
+                                                                         data_provider_coin_m=self.data_provider_coin_m) \
+                .get_positions()
+
+            logger.info(msg='Real positions:',
+                        extra=dict(real_position_quart=real_position_quart, real_position_perp=real_position_perp))
+
+            correction_instructions = self._correction_strategy_position(strategy_instructions, real_position_quart)
+
+            logger.info(msg='Adjusted positions:', extra=dict(instructions=correction_instructions))
+
+            rebalancer_instructions, strategy_positions = Rebalancer(data_provider_usdt_m=self.data_provider_usdt_m,
+                                                                     data_provider_coin_m=self.data_provider_coin_m) \
+                .analyze_account(correction_instructions, real_position_quart, real_position_perp)
+
+            logger.info(msg='Rebalancer instructions:', extra=dict(rebalancer_instructions=rebalancer_instructions))
+
+            close_positions = TranslateLeverage(
+                data_provider_usdt_m=self.data_provider_usdt_m,
+                data_provider_coin_m=self.data_provider_coin_m).translate(rebalancer_instructions,
+                                                                          strategy_positions=strategy_positions)
+
+            logger.info(msg='Close positions', extra=dict(close_positions=close_positions))
+
+            union_instructions = self._union_instructions(correction_instructions, close_positions)
+
+            logger.info(msg='Union instructions', extra=dict(union_instructions=union_instructions))
+
+            tmp_instructions = []
+            for pre_final_instruction in union_instructions:
+                if pre_final_instruction['total_amount'] > 0:
+                    pre_final_instruction['total_amount'] = round(pre_final_instruction['total_amount'],
+                                                                  BinanceExecutor.get_precision(
+                                                                      pre_final_instruction['limit_ticker']))
+                    try:
+                        del pre_final_instruction['strategy_section']
+                    except KeyError:
+                        pass
+                tmp_instructions.append(pre_final_instruction.copy())
+            final_instructions = []
+            for final_instruction in tmp_instructions:
+                if final_instruction['total_amount'] > 0:
+                    final_instructions.append(final_instruction.copy())
+
+            logger.info(msg='Final instructions:', extra=dict(final_instructions=final_instructions))
+
+            if send_message and len(final_instructions) > 0:
+                phrase = self.control_strategy(final_instructions=final_instructions,
+                                               real_positions={**real_position_perp, **real_position_quart})
+                if phrase == 'skip':
+                    time.sleep(5 * 60)
         return final_instructions
 
     @staticmethod
@@ -95,24 +112,28 @@ class DadExecutor:
             bot = TelegramBot()
             continue_work = bot.start(final_instructions=final_instructions,
                                       real_positions=real_positions)
-            if continue_work:
+            if continue_work == 1:
                 bot.send_message('OK')
-            else:
+                return 'ok'
+            elif continue_work == 0:
                 bot.send_message('STOP')
                 sys.exit(0)
+            elif continue_work == 2:
+                bot.send_message('SKIP')
+                return 'skip'
 
     @staticmethod
     def _correction_strategy_position(strategy_positions, real_quart_positions):
         update_strategy_positions = []
-
         for strategy_position in strategy_positions:
+            strategy_position = strategy_position.copy()
             real_amount = real_quart_positions.get(strategy_position['market_ticker'], 0) \
                           + real_quart_positions.get(strategy_position['limit_ticker'], 0)
             if strategy_position['strategy_section'] == 'setup':
                 strategy_position['total_amount'] = max(0, strategy_position['total_amount'] - real_amount)
             elif strategy_position['strategy_section'] == 'exit':
                 strategy_position['total_amount'] = min(strategy_position['total_amount'], real_amount)
-            update_strategy_positions.append(strategy_position.copy())
+            update_strategy_positions.append(strategy_position)
         return update_strategy_positions
 
     @staticmethod
@@ -122,13 +143,21 @@ class DadExecutor:
             for rebalancer_instruction in rebalancer_instructions:
                 if strategy_instruction['market_ticker'] == rebalancer_instruction['market_ticker'] and \
                         strategy_instruction['limit_ticker'] == rebalancer_instruction['limit_ticker']:
-                    if rebalancer_instruction['total_amount'] == 0:
-                        update_instructions.append(strategy_instruction.copy())
-                    else:
-                        if strategy_instruction['strategy_section'] == 'exit':
-                            rebalancer_instruction['total_amount'] = max(strategy_instruction['total_amount'],
-                                                                         rebalancer_instruction['total_amount'])
+                    if strategy_instruction['strategy_section'] == 'exit':
+                        rebalancer_instruction['total_amount'] = max(strategy_instruction['total_amount'],
+                                                                     rebalancer_instruction['total_amount'])
                         update_instructions.append(rebalancer_instruction.copy())
+                    elif strategy_instruction['strategy_section'] == 'setup':
+                        amount = strategy_instruction['total_amount'] - rebalancer_instruction['total_amount']
+                        if amount >= 0:
+                            strategy_instruction['total_amount'] = amount
+                            update_instructions.append(strategy_instruction.copy())
+                        else:
+                            instructions = GeneratePosition().get_close_position_instruction(
+                                section=strategy_instruction['section'],
+                                market_ticker=strategy_instruction['market_ticker'],
+                                limit_ticker=strategy_instruction['limit_ticker'], total_amount=abs(amount))
+                            update_instructions.append(instructions.copy())
         return update_instructions
 
     def _generate_batches(self, instructions: list) -> list:

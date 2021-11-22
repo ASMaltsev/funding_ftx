@@ -47,6 +47,13 @@ class AccountPosition:
                         self._rebalance(position=pos_quart, provider=provider, ticker=quart, delta=delta)
                     else:
                         self._rebalance(position=pos_perp, provider=provider, ticker=perp, delta=delta)
+                elif delta > 0 and delta > max_coef_delta * BinanceExecutor.get_limit_amount(perp):
+                    bot.send_message(msg=f'Stop run. Very bad positions. USDT-M. [{perp}: {pos_perp},'
+                                         f' {quart}: {pos_quart}]')
+                    logger.error(msg='Very bad positions',
+                                 extra=dict(perp=perp, pos_perp=pos_perp, quart=quart, pos_quart=pos_quart))
+                    exit(0)
+
         section = 'COIN-M'
         if section in sections:
 
