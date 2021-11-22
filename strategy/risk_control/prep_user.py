@@ -45,7 +45,7 @@ class Accaunt_set():
 
 
     def get_positions(self, section):
-        client = self.connector_usdt if section == 'USDT-M' else self.connector_usdt
+        client = self.connector_usdt if section == 'USDT-M' else self.connector_coin
         positions = client.get_positions()
 
         for p in positions:
