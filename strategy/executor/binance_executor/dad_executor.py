@@ -36,7 +36,7 @@ class DadExecutor:
                 send_message = True
             else:
                 logger.info(msg='Executor instructions: ', extra=dict(executor_instructions=executor_instructions))
-                phrase, batches = self._generate_batches(executor_instructions)
+                batches = self._generate_batches(executor_instructions)
                 logger.info(msg='Batches: ', extra=dict(batches=batches))
                 for batch in batches:
                     BinanceExecutor(self.api_key, self.secret_key, **batch).execute()
@@ -160,7 +160,7 @@ class DadExecutor:
                             update_instructions.append(instructions.copy())
         return update_instructions
 
-    def _generate_batches(self, instructions: list) -> list:
+    def _generate_batches(self, instructions) -> list:
         for instruction in instructions:
             assets = self.hyperparams_provider.get_assets(instruction['section'])
             min_batch_size = 0
