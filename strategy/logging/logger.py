@@ -2,13 +2,12 @@ import telebot
 import signal
 import logging
 from datetime import datetime
-from strategy.others import CLIENT_NAME, D_TYPE, HOSTS
+from strategy.others import CLIENT_NAME, HOSTS
 from elasticsearch import Elasticsearch
 
 file_path = f'{CLIENT_NAME}_{datetime.utcnow().replace(microsecond=0, second=0)}.log'
 flag = False
 
-d_type = D_TYPE
 hosts = HOSTS
 
 es = Elasticsearch(hosts)
@@ -79,10 +78,15 @@ class CustomAdapter(logging.LoggerAdapter):
             'delta': delta,
             'current_rpc': current_rpc,
             'max_rpc': max_rpc,
+            'label': CLIENT_NAME,
         }
+        # CLIENT_NAME - name container
 
-        index_name = 'docker_test'
-        es.index(index=index_name, doc_type=d_type, body=doc)  # doc_type - name container
+        # elastic DB settings
+        index_name = 'funding_prod'
+        d_type = 'LOGS'
+
+        es.index(index=index_name, doc_type=d_type, body=doc)
         return line, kwargs
 
 
