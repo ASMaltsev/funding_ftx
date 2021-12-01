@@ -1,5 +1,4 @@
 from strategy.data_provider import BinanceDataProvider
-from strategy.hyperparams import ProviderHyperParamsStrategy
 from strategy.logging import Logger
 from strategy.executor.binance_executor.executor import BinanceExecutor
 from strategy.risk_control import TelegramBot
@@ -9,9 +8,10 @@ logger = Logger('AccountControl').create()
 
 class AccountPosition:
 
-    def __init__(self, provider_usdt_m: BinanceDataProvider, provider_coin_m: BinanceDataProvider):
+    def __init__(self, provider_usdt_m: BinanceDataProvider, provider_coin_m: BinanceDataProvider,
+                 provider_hyperparams):
         self.dict_provider = {'USDT-M': provider_usdt_m, 'COIN-M': provider_coin_m}
-        self.provider_hp = ProviderHyperParamsStrategy()
+        self.provider_hyperparams = provider_hyperparams
 
     @staticmethod
     def _rebalance(position, provider, ticker, delta):
@@ -23,15 +23,15 @@ class AccountPosition:
     def control(self):
         bot = TelegramBot()
         max_coef_delta = 1.2
-        sections = self.provider_hp.get_sections()
+        sections = self.provider_hyperparams.get_sections()
         section = 'USDT-M'
         if section in sections:
             provider = self.dict_provider[section]
-            assets = self.provider_hp.get_assets(section)
+            assets = self.provider_hyperparams.get_assets(section)
             precision = 4
             for asset in assets:
-                perp = self.provider_hp.get_ticker_by_asset(section=section, asset=asset, kind='perp')
-                quart = self.provider_hp.get_ticker_by_asset(section=section, asset=asset, kind='quart')
+                perp = self.provider_hyperparams.get_ticker_by_asset(section=section, asset=asset, kind='perp')
+                quart = self.provider_hyperparams.get_ticker_by_asset(section=section, asset=asset, kind='quart')
                 provider.cancel_all_orders(perp)
                 provider.cancel_all_orders(quart)
 
@@ -58,13 +58,14 @@ class AccountPosition:
         if section in sections:
 
             provider = self.dict_provider[section]
-            assets = self.provider_hp.get_assets(section)
+            assets = self.provider_hyperparams.get_assets(section)
 
             precision = 0
             for asset in assets:
-                perp_ticker = self.provider_hp.get_ticker_by_asset(section=section, asset=asset, kind='perp')
-                current_ticker = self.provider_hp.get_ticker_by_asset(section=section, asset=asset, kind='current')
-                next_ticker = self.provider_hp.get_ticker_by_asset(section=section, asset=asset, kind='next')
+                perp_ticker = self.provider_hyperparams.get_ticker_by_asset(section=section, asset=asset, kind='perp')
+                current_ticker = self.provider_hyperparams.get_ticker_by_asset(section=section, asset=asset,
+                                                                               kind='current')
+                next_ticker = self.provider_hyperparams.get_ticker_by_asset(section=section, asset=asset, kind='next')
 
                 provider.cancel_all_orders(perp_ticker)
                 provider.cancel_all_orders(next_ticker)

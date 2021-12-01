@@ -2,7 +2,6 @@ import pandas as pd
 import math
 import copy
 from strategy.data_provider.binanace_provider.binance_data_provider import BinanceDataProvider
-from strategy.hyperparams import AccountHyperParams, ProviderHyperParamsStrategy
 from strategy.logging import Logger
 
 logger = Logger('Rebalancer').create()
@@ -10,11 +9,11 @@ logger = Logger('Rebalancer').create()
 
 class Rebalancer:
 
-    def __init__(self, data_provider_usdt_m: BinanceDataProvider, data_provider_coin_m: BinanceDataProvider):
+    def __init__(self, data_provider_usdt_m: BinanceDataProvider, data_provider_coin_m: BinanceDataProvider,
+                 hyperparams_provider):
         self.data_provider_usdt_m = data_provider_usdt_m
         self.data_provider_coin_m = data_provider_coin_m
-        self.provider_hyperparams_account = AccountHyperParams()
-        self.provider_hyperparams_strategy = ProviderHyperParamsStrategy()
+        self.provider_hyperparams = hyperparams_provider
         self.safety_coef = 0.05
 
     def analyze_account(self, strategy_instructions, real_position_quart, real_position_perp):
@@ -22,10 +21,10 @@ class Rebalancer:
                                                                            real_position_quart,
                                                                            real_position_perp)
         res = {}
-        if 'USDT-M' in self.provider_hyperparams_strategy.get_sections():
+        if 'USDT-M' in self.provider_hyperparams.get_sections():
             res.update({'USDT-M': self._analyze_account_usdt_m(transform_instructions['USDT-M'],
                                                                strategy_amount['USDT-M'])})
-        if 'COIN-M' in self.provider_hyperparams_strategy.get_sections():
+        if 'COIN-M' in self.provider_hyperparams.get_sections():
             res.update({'COIN-M': self._analyze_account_coin_m(transform_instructions['COIN-M'])})
         return res, strategy_amount
 
@@ -72,8 +71,8 @@ class Rebalancer:
     def _analyze_account_coin_m(self, amount_instructions):
         section = 'COIN-M'
         account_info = self.data_provider_coin_m.get_account_info()
-        assets = self.provider_hyperparams_strategy.get_assets(section=section)
-        account_max_leverage = self.provider_hyperparams_account.get_max_leverage('COIN-M')
+        assets = self.provider_hyperparams.get_assets(section=section)
+        account_max_leverage = self.provider_hyperparams.get_max_leverage('COIN-M')
         total_balance = {}
         for asset_info in account_info['tickers']:
             asset = asset_info['ticker']
@@ -82,12 +81,12 @@ class Rebalancer:
         leverage_df = pd.DataFrame(index=assets, columns=['perp', 'current', 'next'])
         real_leverage_df = pd.DataFrame(index=assets, columns=['perp', 'current', 'next'])
         for asset in assets:
-            perp_ticker = self.provider_hyperparams_strategy.get_ticker_by_asset(section=section, asset=asset,
-                                                                                 kind='perp')
-            current_ticker = self.provider_hyperparams_strategy.get_ticker_by_asset(section=section, asset=asset,
-                                                                                    kind='current')
-            next_ticker = self.provider_hyperparams_strategy.get_ticker_by_asset(section=section, asset=asset,
-                                                                                 kind='next')
+            perp_ticker = self.provider_hyperparams.get_ticker_by_asset(section=section, asset=asset,
+                                                                        kind='perp')
+            current_ticker = self.provider_hyperparams.get_ticker_by_asset(section=section, asset=asset,
+                                                                           kind='current')
+            next_ticker = self.provider_hyperparams.get_ticker_by_asset(section=section, asset=asset,
+                                                                        kind='next')
 
             leverage_df.loc[asset, 'perp'] = self._leverage_coin_m(perp_ticker, total_balance[asset],
                                                                    strategy_amount=amount_instructions.get(perp_ticker,
@@ -124,17 +123,17 @@ class Rebalancer:
 
         result = {}
         for asset in assets:
-            perp_ticker = self.provider_hyperparams_strategy.get_ticker_by_asset(section=section, asset=asset,
-                                                                                 kind='perp')
-            current_ticker = self.provider_hyperparams_strategy.get_ticker_by_asset(section=section, asset=asset,
-                                                                                    kind='current')
-            next_ticker = self.provider_hyperparams_strategy.get_ticker_by_asset(section=section, asset=asset,
-                                                                                 kind='next')
-            if real_leverage_df.loc[asset, 'section'] < self.provider_hyperparams_account.get_max_leverage(
+            perp_ticker = self.provider_hyperparams.get_ticker_by_asset(section=section, asset=asset,
+                                                                        kind='perp')
+            current_ticker = self.provider_hyperparams.get_ticker_by_asset(section=section, asset=asset,
+                                                                           kind='current')
+            next_ticker = self.provider_hyperparams.get_ticker_by_asset(section=section, asset=asset,
+                                                                        kind='next')
+            if real_leverage_df.loc[asset, 'section'] < self.provider_hyperparams.get_max_leverage(
                     section=section):
                 leverage = leverage_df.loc[asset, 'delta']
             else:
-                leverage = 0 if leverage_df.loc[asset, 'delta'] < self.provider_hyperparams_account.get_max_ignore(
+                leverage = 0 if leverage_df.loc[asset, 'delta'] < self.provider_hyperparams.get_max_ignore(
                     section=section) else leverage_df.loc[asset, 'delta']
 
             result[asset] = max(0, math.ceil(self._get_amount_ticker_coin_m(leverage=leverage,
@@ -162,16 +161,16 @@ class Rebalancer:
         total_wallet_balance = min(float(account_info['totalWalletBalance']), float(account_info['totalMarginBalance']))
 
         section = 'USDT-M'
-        account_max_leverage = self.provider_hyperparams_account.get_max_leverage(section=section)
-        assets = self.provider_hyperparams_strategy.get_assets(section)
+        account_max_leverage = self.provider_hyperparams.get_max_leverage(section=section)
+        assets = self.provider_hyperparams.get_assets(section)
         leverage_df = pd.DataFrame(index=['perp', 'quart'], columns=assets)
         real_leverage_df = pd.DataFrame(index=['perp', 'quart'], columns=assets)
 
         for asset in assets:
-            perp = self.provider_hyperparams_strategy.get_ticker_by_asset(section=section, asset=asset,
-                                                                          kind='perp')
-            quart = self.provider_hyperparams_strategy.get_ticker_by_asset(section=section, asset=asset,
-                                                                           kind='quart')
+            perp = self.provider_hyperparams.get_ticker_by_asset(section=section, asset=asset,
+                                                                 kind='perp')
+            quart = self.provider_hyperparams.get_ticker_by_asset(section=section, asset=asset,
+                                                                  kind='quart')
             leverage_df.loc['perp', asset] = self._leverage_usdt_m(ticker=perp, twb=total_wallet_balance,
                                                                    amount_strategy=amount_after_strategy.get(perp, 0))
 
@@ -196,7 +195,7 @@ class Rebalancer:
         real_delta = abs(real_leverage_df.loc[type_contract].sum()) - account_max_leverage
         logger.info(msg='Delta leverages.', extra=dict(delta=delta, real_delta=real_delta))
         if real_delta > 0:
-            delta = 0 if delta < self.provider_hyperparams_account.get_max_ignore(section=section) else delta
+            delta = 0 if delta < self.provider_hyperparams.get_max_ignore(section=section) else delta
 
         if delta <= 0:
             return {asset: 0.0 for asset in assets}
@@ -206,11 +205,11 @@ class Rebalancer:
         result = {}
         perp_tickers = set()
         for asset, amount in close_series.items():
-            ticker_perp = self.provider_hyperparams_strategy.get_ticker_by_asset(section=section, asset=asset,
-                                                                                 kind='perp')
+            ticker_perp = self.provider_hyperparams.get_ticker_by_asset(section=section, asset=asset,
+                                                                        kind='perp')
             perp_tickers.add(ticker_perp)
-            ticker_quart = self.provider_hyperparams_strategy.get_ticker_by_asset(section=section, asset=asset,
-                                                                                  kind='quart')
+            ticker_quart = self.provider_hyperparams.get_ticker_by_asset(section=section, asset=asset,
+                                                                         kind='quart')
 
             result[asset] = max(0, self._get_amount_ticker_usdt_m(amount, total_wallet_balance, ticker_perp,
                                                                   ticker_quart))
@@ -221,15 +220,15 @@ class Rebalancer:
         res = {}
         if residue <= 0:
             for asset in change_strategy.keys():
-                perp = self.provider_hyperparams_strategy.get_ticker_by_asset(section=section, asset=asset, kind='perp')
+                perp = self.provider_hyperparams.get_ticker_by_asset(section=section, asset=asset, kind='perp')
                 res[asset] = abs(adjusted_instruction[perp]) - change_strategy[asset]
         else:
             for asset, amount in close_series.items():
-                ticker_perp = self.provider_hyperparams_strategy.get_ticker_by_asset(section=section, asset=asset,
-                                                                                     kind='perp')
+                ticker_perp = self.provider_hyperparams.get_ticker_by_asset(section=section, asset=asset,
+                                                                            kind='perp')
                 perp_tickers.add(ticker_perp)
-                ticker_quart = self.provider_hyperparams_strategy.get_ticker_by_asset(section=section, asset=asset,
-                                                                                      kind='quart')
+                ticker_quart = self.provider_hyperparams.get_ticker_by_asset(section=section, asset=asset,
+                                                                             kind='quart')
 
                 res[asset] = max(0, self._get_amount_ticker_usdt_m(
                     residue / self.data_provider_usdt_m.get_price(ticker=asset + 'USDT'), total_wallet_balance,
@@ -242,7 +241,7 @@ class Rebalancer:
         total_neg_usdt = 0
         change_strategy_asset = {}
         for asset in close_amount.keys():
-            perp = self.provider_hyperparams_strategy.get_ticker_by_asset(section=section, asset=asset, kind='perp')
+            perp = self.provider_hyperparams.get_ticker_by_asset(section=section, asset=asset, kind='perp')
             total_neg_usdt += abs(
                 min((abs(adjusted_instruction.get(perp, 0)) - close_amount[
                     asset]) * self.data_provider_usdt_m.get_price(

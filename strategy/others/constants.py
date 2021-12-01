@@ -5,9 +5,11 @@ SECRET_KEY = os.getenv('secret_key', '')
 
 
 STATHAM_TOKEN = os.getenv('statham_token', '')
-STATHAM_CHAT_ID = os.getenv('statham_chat_id', -1)
+STATHAM_CHAT_ID = os.getenv('statham_chat_id', 0)
 CLIENT_NAME = os.getenv('client_name', '')
+SECTION = os.getenv('section', '')
 
 # logging
-D_TYPE = os.getenv('d_type')
-HOSTS = os.getenv('hosts')
+HOSTS = os.getenv('hosts', '')
+USER_NAME = os.getenv('db_name', '')
+USER_PASS = os.getenv('db_pass', '')

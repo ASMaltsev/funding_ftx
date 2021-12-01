@@ -5,7 +5,7 @@ from strategy.logging import Logger
 from strategy.risk_control import RealStatePositions, Rebalancer
 from strategy.translation import TranslateStrategyInstructions, TranslateLeverage
 from strategy.alpha import FundingAlpha
-from strategy.hyperparams import ProviderHyperParamsStrategy
+from strategy.hyperparams import HyperParams
 from strategy.risk_control import TelegramBot
 from strategy.risk_control import AccountPosition
 from strategy.executor.binance_executor.executor import BinanceExecutor
@@ -22,45 +22,56 @@ class DadExecutor:
 
         self.data_provider_usdt_m = BinanceDataProvider(api_key=api_key, secret_key=secret_key, section='USDT-M')
         self.data_provider_coin_m = BinanceDataProvider(api_key=api_key, secret_key=secret_key, section='COIN-M')
-        self.hyperparams_provider = ProviderHyperParamsStrategy()
 
     def execute(self):
-        account_info = AccountPosition(self.data_provider_usdt_m, self.data_provider_coin_m)
+        hyperparams_provider = HyperParams()
+        hyperparams_provider.update_data()
+
+        account_info = AccountPosition(self.data_provider_usdt_m, self.data_provider_coin_m, hyperparams_provider)
+
         send_message = True
+
         while True:
+
+            hyperparams_provider.update_data()
             account_info.control()
-            executor_instructions = self._generate_instructions(send_message=send_message)
+
+            executor_instructions = self._generate_instructions(send_message=send_message,
+                                                                hyperparams_provider=hyperparams_provider)
             send_message = False
             if len(executor_instructions) == 0:
                 bot = TelegramBot()
                 positions = RealStatePositions(data_provider_coin_m=self.data_provider_coin_m,
-                                               data_provider_usdt_m=self.data_provider_usdt_m).get_positions()
+                                               data_provider_usdt_m=self.data_provider_usdt_m,
+                                               hyperparams_provider=hyperparams_provider).get_positions()
                 bot.send_message(msg='FINISH')
                 bot.send_message(msg=str(positions))
                 time.sleep(120)
                 send_message = True
-
             else:
                 logger.info(msg='Executor instructions: ', extra=dict(executor_instructions=executor_instructions))
-                batches = self._generate_batches(executor_instructions)
+                batches = self._generate_batches(executor_instructions, hyperparams_provider)
                 logger.info(msg='Batches: ', extra=dict(batches=batches))
                 for batch in batches:
                     BinanceExecutor(self.api_key, self.secret_key, **batch).execute()
 
-    def _generate_instructions(self, send_message):
+    def _generate_instructions(self, send_message, hyperparams_provider):
         phrase = 'skip'
         final_instructions = []
         while phrase == 'skip':
-            instructions = FundingAlpha().decide()
+            hyperparams_provider.update_data()
+            instructions = FundingAlpha(hyperparams_provider).decide()
             logger.info(msg='Strategy instructions:', extra=dict(instructions=instructions))
 
             strategy_instructions = TranslateStrategyInstructions(self.data_provider_usdt_m,
-                                                                  self.data_provider_coin_m).parse(instructions)
+                                                                  self.data_provider_coin_m,
+                                                                  hyperparams_provider).parse(instructions)
 
             logger.info(msg='Translate strategy instructions:', extra=dict(strategy_instructions=strategy_instructions))
 
             real_position_quart, real_position_perp = RealStatePositions(data_provider_usdt_m=self.data_provider_usdt_m,
-                                                                         data_provider_coin_m=self.data_provider_coin_m) \
+                                                                         data_provider_coin_m=self.data_provider_coin_m,
+                                                                         hyperparams_provider=hyperparams_provider) \
                 .get_positions()
 
             logger.info(msg='Real positions:',
@@ -71,15 +82,17 @@ class DadExecutor:
             logger.info(msg='Adjusted positions:', extra=dict(instructions=correction_instructions))
 
             rebalancer_instructions, strategy_positions = Rebalancer(data_provider_usdt_m=self.data_provider_usdt_m,
-                                                                     data_provider_coin_m=self.data_provider_coin_m) \
+                                                                     data_provider_coin_m=self.data_provider_coin_m,
+                                                                     hyperparams_provider=hyperparams_provider) \
                 .analyze_account(correction_instructions, real_position_quart, real_position_perp)
 
             logger.info(msg='Rebalancer instructions:', extra=dict(rebalancer_instructions=rebalancer_instructions))
 
             close_positions = TranslateLeverage(
                 data_provider_usdt_m=self.data_provider_usdt_m,
-                data_provider_coin_m=self.data_provider_coin_m).translate(rebalancer_instructions,
-                                                                          strategy_positions=strategy_positions)
+                data_provider_coin_m=self.data_provider_coin_m,
+                hyperparams_provider=hyperparams_provider).translate(rebalancer_instructions,
+                                                                     strategy_positions=strategy_positions)
 
             logger.info(msg='Close positions', extra=dict(close_positions=close_positions))
 
@@ -109,7 +122,7 @@ class DadExecutor:
                 phrase = self.control_strategy(final_instructions=final_instructions,
                                                real_positions={**real_position_perp, **real_position_quart})
                 if phrase == 'skip':
-                    time.sleep(5 * 60)
+                    time.sleep(5 * 1)
             else:
                 phrase = ''
         return final_instructions
@@ -168,13 +181,13 @@ class DadExecutor:
                             update_instructions.append(instructions.copy())
         return update_instructions
 
-    def _generate_batches(self, instructions) -> list:
+    def _generate_batches(self, instructions, hyperparams_provider) -> list:
         for instruction in instructions:
-            assets = self.hyperparams_provider.get_assets(instruction['section'])
+            assets = hyperparams_provider.get_assets(instruction['section'])
             min_batch_size = 0
             for asset in assets:
                 if instruction['limit_ticker'].startswith(asset):
-                    min_batch_size = self.hyperparams_provider.get_min_batch_size(instruction['section'], asset)
+                    min_batch_size = hyperparams_provider.get_min_batch_size(instruction['section'], asset)
                     break
             instruction['total_amount'] = min(min_batch_size, instruction['total_amount'])
         return instructions

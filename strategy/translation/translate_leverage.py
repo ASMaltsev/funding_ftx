@@ -1,14 +1,13 @@
 from strategy.translation import GeneratePosition
-from strategy.hyperparams import ProviderHyperParamsStrategy
 
 
 class TranslateLeverage:
 
-    def __init__(self, data_provider_usdt_m, data_provider_coin_m):
+    def __init__(self, data_provider_usdt_m, data_provider_coin_m, hyperparams_provider):
         self.data_provider_usdt_m = data_provider_usdt_m
         self.data_provider_coin_m = data_provider_coin_m
         self.generate_position = GeneratePosition()
-        self.hyperparams_provider = ProviderHyperParamsStrategy()
+        self.hyperparams_provider = hyperparams_provider
 
     def translate(self, instructions, strategy_positions):
         update_instructions = []

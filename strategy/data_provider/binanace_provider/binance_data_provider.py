@@ -1,9 +1,8 @@
 import time
 from datetime import datetime
 from typing import Tuple
-from connectors import ConnectorRouter
-
-import connectors.exceptions
+from safeconnectors.router import ConnectorRouter
+import connectors
 from strategy.logging import Logger
 from strategy.others import inverse_operation
 from strategy.data_provider.abstract_provider.abstract_data_provider import AbstractExecutorDataProvider
@@ -53,6 +52,7 @@ class BinanceDataProvider(AbstractExecutorDataProvider):
 
     def __init__(self, api_key: str, secret_key: str, section: str):
         super().__init__(api_key, secret_key)
+
         self.connector = ConnectorRouter(exchange='Binance', section=section).init_connector(api_key, secret_key)
         self.section = section
         self._correct_coef = 1.3

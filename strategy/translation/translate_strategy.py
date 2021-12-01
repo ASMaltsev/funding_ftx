@@ -1,4 +1,3 @@
-from strategy.hyperparams import AccountHyperParams
 from strategy.data_provider.binanace_provider.binance_data_provider import BinanceDataProvider
 from strategy.logging import Logger
 from strategy.translation.position_info import GeneratePosition
@@ -9,10 +8,11 @@ logger = my_logger.create()
 
 class TranslateStrategyInstructions:
 
-    def __init__(self, data_provider_usdt_m: BinanceDataProvider, data_provider_coin_m: BinanceDataProvider):
+    def __init__(self, data_provider_usdt_m: BinanceDataProvider, data_provider_coin_m: BinanceDataProvider,
+                 provider_hyperparams):
         self.data_provider_usdt_m = data_provider_usdt_m
         self.data_provider_coin_m = data_provider_coin_m
-        self.account_hyperparams = AccountHyperParams()
+        self.provider_hyperparams = provider_hyperparams
         self.generate_position = GeneratePosition()
 
     def parse(self, instructions: dict):
@@ -80,7 +80,7 @@ class TranslateStrategyInstructions:
         return result
 
     def _size_usdt_m(self, part: float, quart_ticker: str) -> float:
-        leverage = self.account_hyperparams.get_max_leverage(section='USDT-M')
+        leverage = self.provider_hyperparams.get_max_leverage(section='USDT-M')
         total_balance = self.data_provider_usdt_m.get_account_info()['totalWalletBalance']
         precision = self._precision(quart_ticker)
         price = self.data_provider_usdt_m.get_price(quart_ticker)
@@ -98,7 +98,7 @@ class TranslateStrategyInstructions:
             return 3
 
     def _size_coin_m(self, part: float, asset: str, perp_ticker: str) -> float:
-        leverage = self.account_hyperparams.get_max_leverage(section='COIN-M')
+        leverage = self.provider_hyperparams.get_max_leverage(section='COIN-M')
         total_balance = 0
         account_info = self.data_provider_coin_m.get_account_info()
         for info_ticker in account_info['tickers']:

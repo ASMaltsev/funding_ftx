@@ -1,5 +1,4 @@
 from strategy.alpha.tools.abstract_tools import AbstractAlpha
-from strategy.hyperparams import ProviderHyperParamsStrategy
 from strategy.logging import Logger
 from strategy.data_provider import BinanceDataProvider
 
@@ -10,8 +9,7 @@ logger = Logger('Alpha').create()
 
 class FundingAlpha(AbstractAlpha):
 
-    def __init__(self):
-        provider_hyperparams = ProviderHyperParamsStrategy()
+    def __init__(self, provider_hyperparams):
         self.sections = provider_hyperparams.get_sections()
         self.base_fr_earn = provider_hyperparams.get_base_fr_earn()
         self.A = provider_hyperparams.get_A()
@@ -72,7 +70,6 @@ class FundingAlpha(AbstractAlpha):
                 logger.info(msg='Spread:', extra=dict(tickers=pair_usdt_m, spread=spread_apr))
                 if spread_apr < 0:
                     size = 1
-
                 else:
                     size = min(1, size)
                     if self.base_fr_earn - spread_apr > self.A:

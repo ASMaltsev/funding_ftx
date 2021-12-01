@@ -1,83 +1,78 @@
-from strategy.hyperparams.hyperparameters import strategy_hyperparams, account_hyperparams
+from strategy.database_provider.database_provider import DataBaseProvider
+from strategy.others import CLIENT_NAME, SECTION
 
 
-class ProviderHyperParamsStrategy:
+class HyperParams:
 
-    @staticmethod
-    def get_base_fr_earn():
-        return strategy_hyperparams['base_fr_earn']
+    def __init__(self):
+        self.database_provider = None
+        self.strategy_hyperparams = None
+        self.account_hyperparams = None
 
-    @staticmethod
-    def get_A():
-        return strategy_hyperparams['A']
+    def update_data(self):
+        if self.database_provider is not None:
+            self.database_provider.close()
+        self.database_provider = DataBaseProvider()
+        self.strategy_hyperparams = self.database_provider.get_strategy_hyperparams(client_name=CLIENT_NAME,
+                                                                                    section=SECTION)
+        self.account_hyperparams = self.database_provider.get_account_hyperparams(client_name=CLIENT_NAME,
+                                                                                  section=SECTION)
 
-    @staticmethod
-    def get_k():
-        return strategy_hyperparams['k']
+    def get_base_fr_earn(self):
+        return self.strategy_hyperparams['base_fr_earn']
 
-    @staticmethod
-    def get_time_exit():
-        return strategy_hyperparams['time_exit']
+    def get_A(self):
+        return self.strategy_hyperparams['A']
 
-    @staticmethod
-    def get_save_time():
-        return strategy_hyperparams['save_time'](strategy_hyperparams['time_exit'])
+    def get_k(self):
+        return self.strategy_hyperparams['k']
 
-    @staticmethod
-    def get_share(section):
-        return strategy_hyperparams[section]['share']
+    def get_time_exit(self):
+        return self.strategy_hyperparams['time_exit']
 
-    @staticmethod
-    def get_all_tickers(section):
+    def get_save_time(self):
+        return self.strategy_hyperparams['save_time']
+
+    def get_share(self, section):
+        return self.account_hyperparams['section'][section]['share']
+
+    def get_all_tickers(self, section):
         all_tickers = []
-        assets_info = strategy_hyperparams[section]['assets']
+        assets_info = self.account_hyperparams['section'][section]['assets']
         for asset, tickers in assets_info.items():
-
             all_tickers.append(tickers['perp'])
-
             if section == 'USDT-M':
                 all_tickers.append(tickers['quart'])
             elif section == 'COIN-M':
                 all_tickers.append(tickers['current'])
                 all_tickers.append(tickers['next'])
-
         return all_tickers
 
-    @staticmethod
-    def get_assets(section):
-        return list(strategy_hyperparams[section]['assets'].keys())
+    def get_assets(self, section):
+        return list(self.account_hyperparams['section'][section]['assets'].keys())
 
-    @staticmethod
-    def get_list_tickers(section: str, kind: str):
+    def get_list_tickers(self, section: str, kind: str):
         """
         @param section: USDT-M or COIN-M
         @param kind: perp, next, current, quart
         @return: list of tickers
         """
         arr = []
-        for asset, tickers in strategy_hyperparams[section]['assets'].items():
+        for asset, tickers in self.account_hyperparams['section'][section]['assets'].items():
             arr.append(tickers[kind])
         return arr
 
-    @staticmethod
-    def get_ticker_by_asset(section: str, asset: str, kind: str):
-        return strategy_hyperparams[section]['assets'][asset][kind]
+    def get_ticker_by_asset(self, section: str, asset: str, kind: str):
+        return self.account_hyperparams['section'][section]['assets'][asset][kind]
 
-    @staticmethod
-    def get_min_batch_size(section: str, asset: str) -> float:
-        return float(strategy_hyperparams[section]['assets'][asset]['min_batch_size'])
+    def get_min_batch_size(self, section: str, asset: str) -> float:
+        return float(self.account_hyperparams['section'][section]['assets'][asset]['min_batch_size'])
 
-    @staticmethod
-    def get_sections() -> list:
-        return list(set(strategy_hyperparams.keys()).intersection({'USDT-M', 'COIN-M'}))
+    def get_sections(self) -> list:
+        return list(set(self.account_hyperparams['section'].keys()).intersection({'USDT-M', 'COIN-M'}))
 
+    def get_max_leverage(self, section):
+        return self.account_hyperparams['section'][section]['leverages']['leverage_max']
 
-class AccountHyperParams:
-
-    @staticmethod
-    def get_max_leverage(section):
-        return account_hyperparams[section]['leverage_max']
-
-    @staticmethod
-    def get_max_ignore(section):
-        return account_hyperparams[section]['max_ignore']
+    def get_max_ignore(self, section):
+        return self.account_hyperparams['section'][section]['leverages']['max_ignore']

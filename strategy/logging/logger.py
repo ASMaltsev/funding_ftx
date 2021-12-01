@@ -8,9 +8,7 @@ from elasticsearch import Elasticsearch
 file_path = f'{CLIENT_NAME}_{datetime.utcnow().replace(microsecond=0, second=0)}.log'
 flag = False
 
-hosts = HOSTS
-
-es = Elasticsearch(hosts)
+es = Elasticsearch(HOSTS)
 
 
 def send_log():
@@ -86,7 +84,7 @@ class CustomAdapter(logging.LoggerAdapter):
         index_name = 'funding_prod'
         d_type = 'LOGS'
 
-        es.index(index=index_name, doc_type=d_type, body=doc)
+        # es.index(index=index_name, doc_type=d_type, body=doc)
         return line, kwargs
 
 
