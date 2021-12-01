@@ -1,5 +1,5 @@
 from strategy.database_provider.database_provider import DataBaseProvider
-from strategy.others import CLIENT_NAME, SECTION
+from strategy.others import LABEL, SECTION
 
 
 class HyperParams:
@@ -13,9 +13,9 @@ class HyperParams:
         if self.database_provider is not None:
             self.database_provider.close()
         self.database_provider = DataBaseProvider()
-        self.strategy_hyperparams = self.database_provider.get_strategy_hyperparams(client_name=CLIENT_NAME,
+        self.strategy_hyperparams = self.database_provider.get_strategy_hyperparams(client_name=LABEL,
                                                                                     section=SECTION)
-        self.account_hyperparams = self.database_provider.get_account_hyperparams(client_name=CLIENT_NAME,
+        self.account_hyperparams = self.database_provider.get_account_hyperparams(client_name=LABEL,
                                                                                   section=SECTION)
 
     def get_base_fr_earn(self):

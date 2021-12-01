@@ -2,10 +2,10 @@ import telebot
 import signal
 import logging
 from datetime import datetime
-from strategy.others import CLIENT_NAME, HOSTS
+from strategy.others import LABEL, HOSTS
 from elasticsearch import Elasticsearch
 
-file_path = f'{CLIENT_NAME}_{datetime.utcnow().replace(microsecond=0, second=0)}.log'
+file_path = f'{LABEL}_{datetime.utcnow().replace(microsecond=0, second=0)}.log'
 flag = False
 
 es = Elasticsearch(HOSTS)
@@ -76,7 +76,7 @@ class CustomAdapter(logging.LoggerAdapter):
             'delta': delta,
             'current_rpc': current_rpc,
             'max_rpc': max_rpc,
-            'label': CLIENT_NAME,
+            'label': LABEL,
         }
         # CLIENT_NAME - name container
 
