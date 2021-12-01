@@ -84,7 +84,7 @@ class CustomAdapter(logging.LoggerAdapter):
         index_name = 'funding_prod'
         d_type = 'LOGS'
 
-        # es.index(index=index_name, doc_type=d_type, body=doc)
+        es.index(index=index_name, doc_type=d_type, body=doc)
         return line, kwargs
 
 
