@@ -30,6 +30,7 @@ class DadExecutor:
         account_info = AccountPosition(self.data_provider_usdt_m, self.data_provider_coin_m, hyperparams_provider)
 
         send_message = True
+        flag = False
 
         while True:
 
@@ -40,15 +41,18 @@ class DadExecutor:
                                                                 hyperparams_provider=hyperparams_provider)
             send_message = False
             if len(executor_instructions) == 0:
-                bot = TelegramBot()
-                positions = RealStatePositions(data_provider_coin_m=self.data_provider_coin_m,
-                                               data_provider_usdt_m=self.data_provider_usdt_m,
-                                               hyperparams_provider=hyperparams_provider).get_positions()
-                bot.send_message(msg='FINISH')
-                bot.send_message(msg=str(positions))
+                if not flag:
+                    bot = TelegramBot()
+                    positions = RealStatePositions(data_provider_coin_m=self.data_provider_coin_m,
+                                                   data_provider_usdt_m=self.data_provider_usdt_m,
+                                                   hyperparams_provider=hyperparams_provider).get_positions()
+                    bot.send_message(msg='FINISH')
+                    bot.send_message(msg=str(positions))
                 time.sleep(120)
                 send_message = True
+                flag = True
             else:
+                flag = False
                 logger.info(msg='Executor instructions: ', extra=dict(executor_instructions=executor_instructions))
                 batches = self._generate_batches(executor_instructions, hyperparams_provider)
                 logger.info(msg='Batches: ', extra=dict(batches=batches))
