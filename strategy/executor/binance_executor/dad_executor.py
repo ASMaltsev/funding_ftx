@@ -122,7 +122,7 @@ class DadExecutor:
                 phrase = self.control_strategy(final_instructions=final_instructions,
                                                real_positions={**real_position_perp, **real_position_quart})
                 if phrase == 'skip':
-                    time.sleep(5 * 1)
+                    time.sleep(5 * 60)
             else:
                 phrase = ''
         return final_instructions
