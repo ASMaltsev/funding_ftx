@@ -6,7 +6,7 @@ SECRET_KEY = os.getenv('secret_key', '')
 
 STATHAM_TOKEN = os.getenv('statham_token', '')
 STATHAM_CHAT_ID = os.getenv('statham_chat_id', 0)
-LABEL = os.getenv('client_name', '')
+LABEL = os.getenv('label', '')
 SECTION = os.getenv('section', '')
 
 # logging
