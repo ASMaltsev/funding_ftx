@@ -6,7 +6,7 @@ class DataBaseProvider:
     def __init__(self):
         self.connection = ps.connect(dbname='funding_db', user=USER_NAME,
                                      password=USER_PASS,
-                                     host='13.115.232.41',
+                                     host='52.198.147.90',
                                      port='5432')
 
         self.cursor = self.connection.cursor()

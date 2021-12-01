@@ -11,5 +11,5 @@ SECTION = os.getenv('section', '')
 
 # logging
 HOSTS = os.getenv('hosts', '')
-USER_NAME = os.getenv('db_name', '')
-USER_PASS = os.getenv('db_pass', '')
+USER_NAME = os.getenv('user_name', '')
+USER_PASS = os.getenv('user_pass', '')
