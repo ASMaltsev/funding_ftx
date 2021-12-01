@@ -1,4 +1,3 @@
-connectors @ git+ssh://git@github.com/hashcib/connectors@689c426c2275ddf350f3179f679a9bf9b0ee3969
 safeconnectors @ git+ssh://git@github.com/hashcib/safeconnectors@92ebbf8828b66afe9cd72a37dc035bc84d56b137
 termcolor==1.1.0
 websockets==9.1
