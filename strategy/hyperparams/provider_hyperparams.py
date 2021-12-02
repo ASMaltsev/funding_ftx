@@ -75,4 +75,4 @@ class HyperParams:
         return self.account_hyperparams['section'][section]['leverages']['leverage_max']
 
     def get_max_ignore(self, section):
-        return self.account_hyperparams['section'][section]['leverages']['max_ignore']
+        return self.account_hyperparams['section'][section]['leverages']['leverage_max_ignore']
