@@ -10,13 +10,12 @@ class HyperParams:
         self.account_hyperparams = None
 
     def update_data(self):
-        if self.database_provider is not None:
-            self.database_provider.close()
         self.database_provider = DataBaseProvider()
         self.strategy_hyperparams = self.database_provider.get_strategy_hyperparams(client_name=LABEL,
                                                                                     section=SECTION)
         self.account_hyperparams = self.database_provider.get_account_hyperparams(client_name=LABEL,
                                                                                   section=SECTION)
+        self.database_provider.close()
 
     def get_base_fr_earn(self):
         return self.strategy_hyperparams['base_fr_earn']
@@ -76,3 +75,6 @@ class HyperParams:
 
     def get_max_ignore(self, section):
         return self.account_hyperparams['section'][section]['leverages']['leverage_max_ignore']
+
+    def get_limit_amount(self, section, asset):
+        return self.account_hyperparams['section'][section]['assets'][asset]['limit_amount']

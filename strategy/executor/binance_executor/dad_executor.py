@@ -189,9 +189,12 @@ class DadExecutor:
         for instruction in instructions:
             assets = hyperparams_provider.get_assets(instruction['section'])
             min_batch_size = 0
+            limit_amount = 0
             for asset in assets:
                 if instruction['limit_ticker'].startswith(asset):
                     min_batch_size = hyperparams_provider.get_min_batch_size(instruction['section'], asset)
+                    limit_amount = hyperparams_provider.get_limit_amount(section=instruction['section'], asset=asset)
                     break
             instruction['total_amount'] = min(min_batch_size, instruction['total_amount'])
+            instruction['limit_amount'] = limit_amount
         return instructions

@@ -144,8 +144,14 @@ class BinanceDataProvider(AbstractExecutorDataProvider):
 
     @update_rpc
     def get_order_status(self, ticker: str, order_id: int) -> Tuple[str, float]:
-        response = self.connector.status_order(ticker=ticker, order_id=order_id)
-        return response.get('status', None), float(response.get('executedQty', None))
+        for _ in range(10):
+            try:
+                response = self.connector.status_order(ticker=ticker, order_id=order_id)
+                return response.get('status', None), float(response.get('executedQty', None))
+            except connectors.exceptions.RequestError as e:
+                if str(e).find('-2013') > 0:  # {'code': -2013, 'msg': 'Order does not exist.'}
+                    time.sleep(0.1)
+        raise Exception('Order does not exist.')
 
     @update_rpc
     def get_mid_price(self, ticker):
@@ -198,7 +204,8 @@ class BinanceDataProvider(AbstractExecutorDataProvider):
                 return status, order_id, price, executed_qty
 
     @update_rpc
-    def make_safety_market_order(self, ticker: str, side: str, quantity: float, min_size_order: float) -> bool:
+    def make_safety_market_order(self, ticker: str, side: str, quantity: float, min_size_order: float,
+                                 precision) -> bool:
         """
         When order less than MIN NOTIONAL, we sell/buy correct_size and buy/sell correct_size + quantity
         @return: True if success False otherwise
@@ -210,7 +217,6 @@ class BinanceDataProvider(AbstractExecutorDataProvider):
         except connectors.exceptions.RequestError as e:
             logger.warning(msg='Market order less MIN NOTIONAL', extra=dict(Exception=e))
             if str(e).find('-4164') > 0:
-                precision = abs(str(min_size_order).find('.') - len(str(min_size_order))) + 1
 
                 correct_size = round(self._correct_coef * float(min_size_order), precision)
 

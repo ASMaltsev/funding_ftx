@@ -14,13 +14,15 @@ class AccountPosition:
         self.provider_hyperparams = provider_hyperparams
 
     @staticmethod
-    def _rebalance(position, provider, ticker, delta):
+    def _rebalance(position, provider, ticker, delta, precision):
         side = 'buy' if position < 0 else 'sell'
         min_size_order = provider.min_size_for_market_order(ticker)
         provider.make_safety_market_order(ticker=ticker, side=side, quantity=delta,
-                                          min_size_order=min_size_order)
+                                          min_size_order=min_size_order,
+                                          precision=precision)
 
     def control(self):
+        precision = 4
         bot = TelegramBot()
         max_coef_delta = 1.2
         sections = self.provider_hyperparams.get_sections()
@@ -28,7 +30,6 @@ class AccountPosition:
         if section in sections:
             provider = self.dict_provider[section]
             assets = self.provider_hyperparams.get_assets(section)
-            precision = 4
             for asset in assets:
                 perp = self.provider_hyperparams.get_ticker_by_asset(section=section, asset=asset, kind='perp')
                 quart = self.provider_hyperparams.get_ticker_by_asset(section=section, asset=asset, kind='quart')
@@ -44,9 +45,11 @@ class AccountPosition:
                 if 0 < delta <= max_coef_delta * BinanceExecutor.get_limit_amount(perp):
                     bot.send_message(msg=f'Bad positions. USDT-M. [{perp}: {pos_perp}, {quart}: {pos_quart}]')
                     if abs(pos_perp) < abs(pos_quart):
-                        self._rebalance(position=pos_quart, provider=provider, ticker=quart, delta=delta)
+                        self._rebalance(position=pos_quart, provider=provider, ticker=quart, delta=delta,
+                                        precision=precision)
                     else:
-                        self._rebalance(position=pos_perp, provider=provider, ticker=perp, delta=delta)
+                        self._rebalance(position=pos_perp, provider=provider, ticker=perp, delta=delta,
+                                        precision=precision)
                 elif delta > 0 and delta > max_coef_delta * BinanceExecutor.get_limit_amount(perp):
                     bot.send_message(msg=f'Stop run. Very bad positions. USDT-M. [{perp}: {pos_perp},'
                                          f' {quart}: {pos_quart}]')
@@ -85,9 +88,12 @@ class AccountPosition:
                         msg=f"""Bad positions. USDT-M. [{perp_ticker}: {pos_perp}, {current_ticker}: {pos_cur},'
                                                             {next_ticker}, {pos_next}]""")
                     if abs(pos_cur + pos_next) < abs(pos_perp):
-                        self._rebalance(position=pos_perp, provider=provider, ticker=perp_ticker, delta=delta)
+                        self._rebalance(position=pos_perp, provider=provider, ticker=perp_ticker, delta=delta,
+                                        precision=precision)
                     else:
                         if abs(pos_cur) < abs(pos_next):
-                            self._rebalance(position=pos_next, provider=provider, ticker=next_ticker, delta=delta)
+                            self._rebalance(position=pos_next, provider=provider, ticker=next_ticker, delta=delta,
+                                            precision=precision)
                         else:
-                            self._rebalance(position=pos_cur, provider=provider, ticker=current_ticker, delta=delta)
+                            self._rebalance(position=pos_cur, provider=provider, ticker=current_ticker, delta=delta,
+                                            precision=precision)

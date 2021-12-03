@@ -13,10 +13,10 @@ logger = my_logger.create()
 class BinanceExecutor(AbstractExecutor):
 
     def __init__(self, api_key: str, secret_key: str, section: str, market_ticker: str, limit_ticker: str,
-                 limit_side: str, market_side: str, total_amount: float, reduce_only: bool):
+                 limit_side: str, market_side: str, total_amount: float, reduce_only: bool, limit_amount: float):
 
         self.data_provider = BinanceDataProvider(section=section, api_key=api_key, secret_key=secret_key)
-
+        self.limit_amount = limit_amount
         self.start_amount_limit = 0
         self.start_amount_market = 0
         self.market_ticker = market_ticker
@@ -55,12 +55,14 @@ class BinanceExecutor(AbstractExecutor):
             self.data_provider.make_safety_market_order(ticker=self.market_ticker,
                                                         side=self.market_side,
                                                         quantity=delta,
-                                                        min_size_order=min_size_order)
+                                                        min_size_order=min_size_order,
+                                                        precision=self.precision)
         elif delta < 0 and abs(delta) <= max_coef_delta * limit_amount:
             self.data_provider.make_safety_market_order(ticker=self.market_ticker,
                                                         side=self.market_side,
                                                         quantity=abs(delta),
-                                                        min_size_order=min_size_order)
+                                                        min_size_order=min_size_order,
+                                                        precision=self.precision)
         elif delta == 0:
             pass
         else:
@@ -94,7 +96,7 @@ class BinanceExecutor(AbstractExecutor):
         @return: amount for one limit order
         """
         if ticker.startswith('BTCUSDT'):
-            return 0.001
+            return 0.002
         elif ticker.startswith('ETHUSDT'):
             return 0.02
         elif ticker.startswith('BTCUSD'):
@@ -136,8 +138,6 @@ class BinanceExecutor(AbstractExecutor):
             limit_qty = round(
                 min(self.get_limit_amount(ticker=self.limit_ticker), self.total_amount - self.current_amount_qty),
                 self.precision)
-            # logger.info('Sleeping 60 sec for revocation RPC...')
-            # time.sleep(60)
 
             logger.info(msg='Start shopping.',
                         extra=dict(market_ticker=self.market_ticker, market_side=self.market_side,
@@ -163,7 +163,8 @@ class BinanceExecutor(AbstractExecutor):
                     logger.info(msg='Make market order.', extra=dict(ticker=self.market_ticker, quantity=delta))
                     self.data_provider.make_safety_market_order(ticker=self.market_ticker, side=self.market_side,
                                                                 quantity=delta,
-                                                                min_size_order=min_size_market_order)
+                                                                min_size_order=min_size_market_order,
+                                                                precision=self.precision)
                     self.current_amount_qty += delta
                     limit_qty = round(min(self.get_limit_amount(ticker=self.limit_ticker),
                                           self.total_amount - self.current_amount_qty),
@@ -190,7 +191,8 @@ class BinanceExecutor(AbstractExecutor):
                         logger.info(msg='Make market order', extra=dict(ticker=self.market_ticker, quantity=delta))
                         self.data_provider.make_safety_market_order(ticker=self.market_ticker, side=self.market_side,
                                                                     quantity=delta,
-                                                                    min_size_order=min_size_market_order)
+                                                                    min_size_order=min_size_market_order,
+                                                                    precision=self.precision)
                         self.current_amount_qty += delta
 
                     side_index = 1 if self.limit_side == 'sell' else 0
@@ -212,7 +214,8 @@ class BinanceExecutor(AbstractExecutor):
                             self.data_provider.make_safety_market_order(ticker=self.market_ticker,
                                                                         side=self.market_side,
                                                                         quantity=delta,
-                                                                        min_size_order=min_size_market_order)
+                                                                        min_size_order=min_size_market_order,
+                                                                        precision=self.precision)
                             self.current_amount_qty += delta
                             limit_qty = round(
                                 min(self.get_limit_amount(ticker=self.limit_ticker),
@@ -241,6 +244,9 @@ class BinanceExecutor(AbstractExecutor):
             self.current_amount_qty = 0
             self.check_positions(min_size_market_order)
             self.execute()
+
+        except Exception as e:
+            logger.error(msg=str(e))
         finally:
             send_log()
 
