@@ -1,4 +1,3 @@
-from termcolor import colored
 import time
 import sys
 import requests
@@ -26,23 +25,27 @@ class BinanceExecutor(AbstractExecutor):
         self.total_amount = total_amount
         self.reduce_only = reduce_only
         self.current_amount_qty = 0
-        self.precision = None
+        self.precision = self.get_precision(self.limit_ticker)
 
     def _work_before_new_limit_order(self, min_size_order):
-        logger.info(msg=colored('Rate limits:', 'blue'),
+        logger.info(msg='Rate limits:',
                     extra=dict(current_rpc=self.data_provider.current_rpc, max_rpc=self.data_provider.max_rpc))
         self._control_rpc()
         self._log_current_positions(min_size_order)
 
     def check_positions(self, min_size_order):
-        time.sleep(0.2)
         max_coef_delta = 1.2
+        time.sleep(0.1)
         self.data_provider.cancel_all_orders(self.limit_ticker)
         self.data_provider.cancel_all_orders(self.market_ticker)
-        pos_limit_side = round(self.data_provider.get_amount_positions(self.limit_ticker), self.precision)
-        pos_market_side = round(self.data_provider.get_amount_positions(self.market_ticker), self.precision)
+        time.sleep(0.2)
 
-        logger.info(msg=colored('Control positions.', 'green'),
+        pos_limit_side, pos_market_side = 0, 0
+        for _ in range(3):
+            pos_limit_side = round(self.data_provider.get_amount_positions(self.limit_ticker), self.precision)
+            pos_market_side = round(self.data_provider.get_amount_positions(self.market_ticker), self.precision)
+
+        logger.info(msg='Control positions.',
                     extra=dict(pos_market_side=pos_market_side, pos_limit_side=pos_limit_side))
 
         current_position_limit = round(pos_limit_side - self.start_amount_limit, self.precision)
@@ -77,11 +80,11 @@ class BinanceExecutor(AbstractExecutor):
         time.sleep(0.2)
         limit_amount = self.data_provider.get_amount_positions(self.limit_ticker)
         market_amount = self.data_provider.get_amount_positions(self.market_ticker)
-        logger.info(msg=colored('Current positions:', 'green'),
+        logger.info(msg='Current positions:',
                     extra=dict(limit_amount=limit_amount, market_amount=market_amount,
                                delta=limit_amount + market_amount))
         delta = abs((limit_amount - self.start_amount_limit) + (market_amount - self.start_amount_market))
-        logger.info(msg=colored('Current positions with correction on initial positions:', 'green'),
+        logger.info(msg='Current positions with correction on initial positions:',
                     extra=dict(limit_amount=limit_amount - self.start_amount_limit,
                                market_amount=market_amount - self.start_amount_market,
                                delta=delta))
@@ -132,8 +135,6 @@ class BinanceExecutor(AbstractExecutor):
 
             prev_executed_qty = 0
             min_size_market_order = self.data_provider.min_size_for_market_order(ticker=self.market_ticker)
-
-            self.precision = self.get_precision(self.limit_ticker)
 
             limit_qty = round(
                 min(self.get_limit_amount(ticker=self.limit_ticker), self.total_amount - self.current_amount_qty),
