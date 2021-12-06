@@ -129,18 +129,19 @@ class Rebalancer:
                                                                            kind='current')
             next_ticker = self.provider_hyperparams.get_ticker_by_asset(section=section, asset=asset,
                                                                         kind='next')
-            if real_leverage_df.loc[asset, 'section'] < self.provider_hyperparams.get_max_leverage(
-                    section=section):
-                leverage = leverage_df.loc[asset, 'delta']
-            else:
+
+            if real_leverage_df.loc[asset, 'section'] > self.provider_hyperparams.get_max_leverage(section=section):
+
                 leverage = 0 if leverage_df.loc[asset, 'delta'] < self.provider_hyperparams.get_max_ignore(
                     section=section) else leverage_df.loc[asset, 'delta']
-
-            result[asset] = max(0, math.ceil(self._get_amount_ticker_coin_m(leverage=leverage,
-                                                                            twb=total_balance[asset],
-                                                                            ticker_1=perp_ticker,
-                                                                            ticker_2=current_ticker,
-                                                                            ticker_3=next_ticker)))
+                if leverage == 0:
+                    result[asset] = -1 * amount_instructions[asset + 'USD_PERP']
+                else:
+                    result[asset] = max(0, math.ceil(self._get_amount_ticker_coin_m(leverage=leverage,
+                                                                                    twb=total_balance[asset],
+                                                                                    ticker_1=perp_ticker,
+                                                                                    ticker_2=current_ticker,
+                                                                                    ticker_3=next_ticker)))
         return result
 
     def _leverage_coin_m(self, ticker, twb, strategy_amount=0, only_account=False):
@@ -157,9 +158,7 @@ class Rebalancer:
 
     def _analyze_account_usdt_m(self, amount_after_strategy, adjusted_instruction):
         account_info = self.data_provider_usdt_m.get_account_info()
-
         total_wallet_balance = min(float(account_info['totalWalletBalance']), float(account_info['totalMarginBalance']))
-
         section = 'USDT-M'
         account_max_leverage = self.provider_hyperparams.get_max_leverage(section=section)
         assets = self.provider_hyperparams.get_assets(section)
@@ -196,6 +195,11 @@ class Rebalancer:
         logger.info(msg='Delta leverages.', extra=dict(delta=delta, real_delta=real_delta))
         if real_delta > 0:
             delta = 0 if delta < self.provider_hyperparams.get_max_ignore(section=section) else delta
+            if delta == 0:
+                res = dict()
+                for asset in assets:
+                    res[asset] = -1 * adjusted_instruction.get(asset + 'USDT', 0)
+                return res
 
         if delta <= 0:
             return {asset: 0.0 for asset in assets}
