@@ -6,7 +6,6 @@ import connectors
 from strategy.logging import Logger
 from strategy.others import inverse_operation
 from strategy.data_provider.abstract_provider.abstract_data_provider import AbstractExecutorDataProvider
-from strategy.data_provider.binanace_provider.binance_data_ws import WebSocketStream
 
 logger = Logger('DataProviderExecutor').create()
 
@@ -128,18 +127,10 @@ class BinanceDataProvider(AbstractExecutorDataProvider):
     def get_amount_positions(self, ticker: str) -> float:
         return self.connector.get_positions(ticker=ticker)[0]['positionAmt']
 
+    @update_rpc
     def get_bbid_bask(self, ticker: str) -> Tuple[float, float]:
-        self._create_webosocket(ticker=ticker)
-        data = self.ws.get_state()
-        while data is None:
-            data = self.ws.get_state()
-        return float(data['b']), float(data['a'])
-
-    def _create_webosocket(self, ticker):
-        if self.ws is None:
-            self.ws = WebSocketStream(section=self.section, ticker=ticker)
-            self.ws.daemon = True
-            self.ws.start()
+        response = self.connector.get_bbid_bask(ticker=ticker)
+        return float(response.get('bidPrice', None)), float(response.get('askPrice', None))
 
     @update_rpc
     def get_order_status(self, ticker: str, order_id: int) -> Tuple[str, float]:
