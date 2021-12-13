@@ -2,13 +2,13 @@ import telebot
 import signal
 import logging
 from datetime import datetime
-from strategy.others import LABEL, HOSTS, SECTION
+from strategy.others import LABEL, HOSTS, SECTION, ELASTIC_NAME, ELASTIC_PASS
 from elasticsearch import Elasticsearch
 
 file_path = f'{LABEL}_{SECTION}_{datetime.utcnow().replace(microsecond=0, second=0)}.log'
 flag = False
 
-es = Elasticsearch(HOSTS)
+es = Elasticsearch(HOSTS, http_auth=(ELASTIC_NAME, ELASTIC_PASS))
 
 
 def send_log():
