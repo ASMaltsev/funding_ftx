@@ -49,7 +49,7 @@ def update_rpc(func):
 
 class BinanceDataProvider(AbstractExecutorDataProvider):
 
-    def __init__(self, api_key: str, secret_key: str, section: str):
+    def __init__(self, api_key: str, secret_key: str, section: str, ws_provider=None):
         super().__init__(api_key, secret_key)
 
         self.connector = ConnectorRouter(exchange='Binance', section=section).init_connector(api_key, secret_key)
@@ -59,6 +59,7 @@ class BinanceDataProvider(AbstractExecutorDataProvider):
         self.max_rpc = self._get_max_limit()
         self.warning_rpc = False
         self.ws = None
+        self.ws_provider = ws_provider
 
     def _get_max_limit(self) -> int:
         for type_limit in self.connector.get_exchange_info()['rateLimits']:
@@ -129,8 +130,8 @@ class BinanceDataProvider(AbstractExecutorDataProvider):
 
     @update_rpc
     def get_bbid_bask(self, ticker: str) -> Tuple[float, float]:
-        response = self.connector.get_bbid_bask(ticker=ticker)
-        return float(response.get('bidPrice', None)), float(response.get('askPrice', None))
+        response = self.ws_provider.get_state()
+        return float(response.get('b', None)), float(response.get('a', None))
 
     @update_rpc
     def get_order_status(self, ticker: str, order_id: int) -> Tuple[str, float]:

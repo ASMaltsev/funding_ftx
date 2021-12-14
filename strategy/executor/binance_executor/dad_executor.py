@@ -99,7 +99,6 @@ class DadExecutor:
                                                                      strategy_positions=strategy_positions)
 
             logger.info(msg='Close positions', extra=dict(close_positions=close_positions))
-
             union_instructions = self._union_instructions(correction_instructions, close_positions)
 
             logger.info(msg='Union instructions', extra=dict(union_instructions=union_instructions))

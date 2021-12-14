@@ -4,8 +4,8 @@ import boto3
 import base64
 from botocore.exceptions import ClientError
 
-
 secret_name = os.getenv('secret_name')
+
 
 def get_secret(name_key):
     global secret_name
@@ -59,7 +59,7 @@ def get_secret(name_key):
         else:
             decoded_binary_secret = base64.b64decode(get_secret_value_response['SecretBinary'])
 
-     
+
 LABEL = os.getenv('label')
 API_KEY, SECRET_KEY = get_secret(LABEL)
 

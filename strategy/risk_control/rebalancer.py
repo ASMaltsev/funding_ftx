@@ -142,6 +142,17 @@ class Rebalancer:
                                                                                     ticker_1=perp_ticker,
                                                                                     ticker_2=current_ticker,
                                                                                     ticker_3=next_ticker)))
+            else:
+                if leverage_df.loc[asset, 'delta'] < 0:
+                    result[asset] = 0
+                else:
+                    result[asset] = max(0, math.ceil(
+                        self._get_amount_ticker_coin_m(leverage=abs(leverage_df.loc[asset, 'delta']),
+                                                       twb=total_balance[asset],
+                                                       ticker_1=perp_ticker,
+                                                       ticker_2=current_ticker,
+                                                       ticker_3=next_ticker)))
+
         return result
 
     def _leverage_coin_m(self, ticker, twb, strategy_amount=0, only_account=False):
