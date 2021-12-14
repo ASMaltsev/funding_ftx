@@ -25,7 +25,8 @@ class Rebalancer:
             res.update({'USDT-M': self._analyze_account_usdt_m(transform_instructions['USDT-M'],
                                                                strategy_amount['USDT-M'])})
         if 'COIN-M' in self.provider_hyperparams.get_sections():
-            res.update({'COIN-M': self._analyze_account_coin_m(transform_instructions['COIN-M'])})
+            res.update(
+                {'COIN-M': self._analyze_account_coin_m(transform_instructions['COIN-M'], strategy_amount['COIN-M'])})
         return res, strategy_amount
 
     def _transform_strategy(self, strategy_instructions, real_position_quart, real_position_perp):
@@ -68,7 +69,7 @@ class Rebalancer:
         elif side == 'buy':
             return 1
 
-    def _analyze_account_coin_m(self, amount_instructions):
+    def _analyze_account_coin_m(self, amount_instructions, adjusted_instruction):
         section = 'COIN-M'
         account_info = self.data_provider_coin_m.get_account_info()
         assets = self.provider_hyperparams.get_assets(section=section)
@@ -134,8 +135,9 @@ class Rebalancer:
 
                 leverage = 0 if leverage_df.loc[asset, 'delta'] < self.provider_hyperparams.get_max_ignore(
                     section=section) else leverage_df.loc[asset, 'delta']
+
                 if leverage == 0:
-                    result[asset] = -1 * amount_instructions[asset + 'USD_PERP']
+                    result[asset] = -1 * adjusted_instruction[asset + 'USD_PERP']
                 else:
                     result[asset] = max(0, math.ceil(self._get_amount_ticker_coin_m(leverage=leverage,
                                                                                     twb=total_balance[asset],
@@ -152,7 +154,6 @@ class Rebalancer:
                                                        ticker_1=perp_ticker,
                                                        ticker_2=current_ticker,
                                                        ticker_3=next_ticker)))
-
         return result
 
     def _leverage_coin_m(self, ticker, twb, strategy_amount=0, only_account=False):
