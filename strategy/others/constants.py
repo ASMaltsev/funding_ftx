@@ -5,6 +5,7 @@ import base64
 from botocore.exceptions import ClientError
 
 secret_name = os.getenv('secret_name')
+LABEL = os.getenv('label')
 
 
 def get_secret(name_key):
@@ -29,7 +30,8 @@ def get_secret(name_key):
             if data[item]['label'] == name_key:
                 api_key = data[item]['api_key']
                 api_secret = data[item]['api_secret']
-        return api_key, api_secret
+        os.environ["api_key"] = api_key
+        os.environ["secret_key"] = api_secret
     except ClientError as e:
         if e.response['Error']['Code'] == 'DecryptionFailureException':
             # Secrets Manager can't decrypt the protected secret text using the provided KMS key.
@@ -60,8 +62,8 @@ def get_secret(name_key):
             decoded_binary_secret = base64.b64decode(get_secret_value_response['SecretBinary'])
 
 
-LABEL = os.getenv('label')
-API_KEY, SECRET_KEY = get_secret(LABEL)
+API_KEY = os.getenv('api_key')
+SECRET_KEY = os.getenv('secret_key')
 
 STATHAM_TOKEN = os.getenv('statham_token')
 STATHAM_CHAT_ID = os.getenv('statham_chat_id')
