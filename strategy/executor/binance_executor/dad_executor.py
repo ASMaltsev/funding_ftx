@@ -19,8 +19,6 @@ class DadExecutor:
     def __init__(self, api_key, secret_key):
         self.api_key = api_key
         self.secret_key = secret_key
-        print(api_key)
-        print(secret_key)
         self.data_provider_usdt_m = BinanceDataProvider(api_key=api_key, secret_key=secret_key, section='USDT-M')
         self.data_provider_coin_m = BinanceDataProvider(api_key=api_key, secret_key=secret_key, section='COIN-M')
 
