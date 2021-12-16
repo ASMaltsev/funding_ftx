@@ -2,8 +2,8 @@
 
 from strategy.executor import DadExecutor
 from strategy.others import LABEL
-from strategy.others.constants import get_secret
+from strategy.others.constants import Keys
 
-get_secret(LABEL)
+keys = Keys()
 
-DadExecutor().execute()
+DadExecutor(api_key=keys.API_KEY, secret_key=keys.SECRET_KEY).execute()

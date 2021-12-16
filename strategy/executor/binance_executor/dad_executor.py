@@ -10,18 +10,19 @@ from strategy.risk_control import TelegramBot
 from strategy.risk_control import AccountPosition
 from strategy.executor.binance_executor.executor import BinanceExecutor
 from strategy.translation import GeneratePosition
-from strategy.others import API_KEY, SECRET_KEY
+
 logger = Logger('DadExecutor').create()
 
 
 class DadExecutor:
 
-    def __init__(self):
-        self.api_key = API_KEY
-        self.secret_key = SECRET_KEY
-
-        self.data_provider_usdt_m = BinanceDataProvider(api_key=API_KEY, secret_key=SECRET_KEY, section='USDT-M')
-        self.data_provider_coin_m = BinanceDataProvider(api_key=API_KEY, secret_key=SECRET_KEY, section='COIN-M')
+    def __init__(self, api_key, secret_key):
+        self.api_key = api_key
+        self.secret_key = secret_key
+        print(api_key)
+        print(secret_key)
+        self.data_provider_usdt_m = BinanceDataProvider(api_key=api_key, secret_key=secret_key, section='USDT-M')
+        self.data_provider_coin_m = BinanceDataProvider(api_key=api_key, secret_key=secret_key, section='COIN-M')
 
     def execute(self):
         hyperparams_provider = HyperParams()
