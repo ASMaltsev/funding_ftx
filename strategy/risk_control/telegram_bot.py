@@ -3,11 +3,6 @@ import time
 from strategy.others import STATHAM_TOKEN, STATHAM_CHAT_ID
 
 
-# #INS
-# token = '2141088886:AAGhy42cmvbvgGmSfJ_3wxd00lL3MYjZ3HA'
-# chat_id = -711071654
-
-
 class TelegramBot:
 
     def __init__(self):
