@@ -20,6 +20,7 @@ class BinanceExecutor(AbstractExecutor):
                                                  ws_provider=self.ws_provider)
 
         self.limit_amount = limit_amount
+        print(self.limit_amount)
         self.start_amount_limit = 0
         self.start_amount_market = 0
         self.market_ticker = market_ticker
@@ -133,7 +134,7 @@ class BinanceExecutor(AbstractExecutor):
                                    reduce_only=self.reduce_only,
                                    start_amount_limit=self.start_amount_limit,
                                    start_amount_market=self.start_amount_market, precision=self.precision,
-                                   limit_amount = self.limit_amount))
+                                   limit_amount=self.limit_amount))
 
             self._work_before_new_limit_order(min_size_market_order)
             order_status, order_id, price_limit_order, executed_qty = self.data_provider.make_safety_limit_order(
