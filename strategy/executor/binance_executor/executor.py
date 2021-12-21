@@ -57,7 +57,6 @@ class BinanceExecutor(AbstractExecutor):
 
         delta = round(abs(current_position_limit) - abs(current_position_market), self.precision)
         logger.info(msg=f'CHECK POSITION.', extra=dict(delta=delta))
-
         if 0 < delta <= max_coef_delta * self.limit_amount:
             self.data_provider.make_safety_market_order(ticker=self.market_ticker,
                                                         side=self.market_side,

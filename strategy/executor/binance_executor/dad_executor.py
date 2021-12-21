@@ -34,7 +34,6 @@ class DadExecutor:
         while True:
 
             hyperparams_provider.update_data()
-            account_info.control()
 
             executor_instructions = self._generate_instructions(send_message=send_message,
                                                                 hyperparams_provider=hyperparams_provider)
@@ -56,6 +55,7 @@ class DadExecutor:
                 batches = self._generate_batches(executor_instructions, hyperparams_provider)
                 logger.info(msg='Batches: ', extra=dict(batches=batches))
                 for batch in batches:
+                    account_info.control(batch['limit_amount'])
                     BinanceExecutor(self.api_key, self.secret_key, **batch).execute()
 
     def _generate_instructions(self, send_message, hyperparams_provider):

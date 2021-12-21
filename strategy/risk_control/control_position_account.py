@@ -1,6 +1,5 @@
 from strategy.data_provider import BinanceDataProvider
 from strategy.logging import Logger
-from strategy.executor.binance_executor.executor import BinanceExecutor
 from strategy.risk_control import TelegramBot
 
 logger = Logger('AccountControl').create()
@@ -21,7 +20,7 @@ class AccountPosition:
                                           min_size_order=min_size_order,
                                           precision=precision)
 
-    def control(self):
+    def control(self, limit_amount):
         precision = 4
         bot = TelegramBot()
         max_coef_delta = 1.2
@@ -42,7 +41,7 @@ class AccountPosition:
 
                 delta = abs(round(pos_perp + pos_quart, precision))
                 logger.info(msg=f'Delta: ', extra=dict(delta=delta))
-                if 0 < delta <= max_coef_delta * BinanceExecutor.get_limit_amount(perp):
+                if 0 < delta <= max_coef_delta * limit_amount:
                     bot.send_message(msg=f'Bad positions. USDT-M. [{perp}: {pos_perp}, {quart}: {pos_quart}]')
                     if abs(pos_perp) < abs(pos_quart):
                         self._rebalance(position=pos_quart, provider=provider, ticker=quart, delta=delta,
@@ -50,7 +49,7 @@ class AccountPosition:
                     else:
                         self._rebalance(position=pos_perp, provider=provider, ticker=perp, delta=delta,
                                         precision=precision)
-                elif delta > 0 and delta > max_coef_delta * BinanceExecutor.get_limit_amount(perp):
+                elif delta > 0 and delta > max_coef_delta * limit_amount:
                     bot.send_message(msg=f'Stop run. Very bad positions. USDT-M. [{perp}: {pos_perp},'
                                          f' {quart}: {pos_quart}]')
                     logger.error(msg='Very bad positions',
@@ -83,7 +82,7 @@ class AccountPosition:
                 delta = abs(round(pos_perp + pos_next + pos_cur, precision))
 
                 logger.info(msg=f'Delta: ', extra=dict(delta=delta))
-                if 0 < delta <= max_coef_delta * BinanceExecutor.get_limit_amount(perp_ticker):
+                if 0 < delta <= max_coef_delta * limit_amount:
                     bot.send_message(
                         msg=f"""Bad positions. USDT-M. [{perp_ticker}: {pos_perp}, {current_ticker}: {pos_cur},'
                                                             {next_ticker}, {pos_next}]""")
