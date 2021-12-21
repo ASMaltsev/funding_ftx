@@ -57,14 +57,14 @@ class BinanceExecutor(AbstractExecutor):
 
         delta = round(abs(current_position_limit) - abs(current_position_market), self.precision)
         logger.info(msg=f'CHECK POSITION.', extra=dict(delta=delta))
-        limit_amount = self.get_limit_amount(self.limit_ticker)
-        if 0 < delta <= max_coef_delta * limit_amount:
+
+        if 0 < delta <= max_coef_delta * self.limit_amount:
             self.data_provider.make_safety_market_order(ticker=self.market_ticker,
                                                         side=self.market_side,
                                                         quantity=delta,
                                                         min_size_order=min_size_order,
                                                         precision=self.precision)
-        elif delta < 0 and abs(delta) <= max_coef_delta * limit_amount:
+        elif delta < 0 and abs(delta) <= max_coef_delta * self.limit_amount:
             self.data_provider.make_safety_market_order(ticker=self.market_ticker,
                                                         side=self.market_side,
                                                         quantity=abs(delta),
@@ -97,24 +97,6 @@ class BinanceExecutor(AbstractExecutor):
             self.check_positions(min_size_order)
 
     @staticmethod
-    def get_limit_amount(ticker: str) -> float:
-        """
-        @param ticker: pair name
-        @return: amount for one limit order
-        """
-        if ticker.startswith('BTCUSDT'):
-            return 0.002
-        elif ticker.startswith('ETHUSDT'):
-            return 0.02
-        elif ticker.startswith('BTCUSD'):
-            return 1
-        elif ticker.startswith('ETHUSD'):
-            return 2
-        elif ticker.startswith('BNBUSD'):
-            return 10
-        raise NotImplementedError
-
-    @staticmethod
     def get_precision(ticker: str) -> int:
         """
         @param ticker: pair name
@@ -142,7 +124,7 @@ class BinanceExecutor(AbstractExecutor):
             min_size_market_order = self.data_provider.min_size_for_market_order(ticker=self.market_ticker)
 
             limit_qty = round(
-                min(self.get_limit_amount(ticker=self.limit_ticker), self.total_amount - self.current_amount_qty),
+                min(self.limit_amount, self.total_amount - self.current_amount_qty),
                 self.precision)
 
             logger.info(msg='Start shopping.',
@@ -172,7 +154,7 @@ class BinanceExecutor(AbstractExecutor):
                                                                 min_size_order=min_size_market_order,
                                                                 precision=self.precision)
                     self.current_amount_qty += delta
-                    limit_qty = round(min(self.get_limit_amount(ticker=self.limit_ticker),
+                    limit_qty = round(min(self.limit_amount,
                                           self.total_amount - self.current_amount_qty),
                                       self.precision)
 
@@ -224,7 +206,7 @@ class BinanceExecutor(AbstractExecutor):
                                                                         precision=self.precision)
                             self.current_amount_qty += delta
                             limit_qty = round(
-                                min(self.get_limit_amount(ticker=self.limit_ticker),
+                                min(self.limit_amount,
                                     self.total_amount - self.current_amount_qty), self.precision)
                             if limit_qty == 0:
                                 self.check_positions(min_size_market_order)
