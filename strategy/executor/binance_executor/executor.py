@@ -20,7 +20,6 @@ class BinanceExecutor(AbstractExecutor):
                                                  ws_provider=self.ws_provider)
 
         self.limit_amount = limit_amount
-        print(f'################## {self.limit_amount} ##################')
         self.start_amount_limit = 0
         self.start_amount_market = 0
         self.market_ticker = market_ticker
