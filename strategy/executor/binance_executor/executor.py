@@ -104,7 +104,7 @@ class BinanceExecutor(AbstractExecutor):
         if ticker.startswith('BTCUSDT'):
             return 3
         elif ticker.startswith('ETHUSDT'):
-            return 2
+            return 3
         elif ticker.startswith('BTCUSD'):
             return 0
         elif ticker.startswith('ETHUSD'):
