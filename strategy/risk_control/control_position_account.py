@@ -1,7 +1,7 @@
 from strategy.data_provider import BinanceDataProvider
 from strategy.logging import Logger
 from strategy.risk_control import TelegramBot
-
+from strategy.executor.binance_executor.executor import BinanceExecutor
 logger = Logger('AccountControl').create()
 
 
@@ -21,12 +21,16 @@ class AccountPosition:
             side = 'buy' if position < 0 else 'sell'
 
         min_size_order = provider.min_size_for_market_order(ticker)
+
+        logger.info('Account rebalance params', extra=dict(ticker=ticker, side=side, quantity=delta,
+                                                           min_size_order=min_size_order,
+                                                           precision=precision))
+
         provider.make_safety_market_order(ticker=ticker, side=side, quantity=delta,
                                           min_size_order=min_size_order,
                                           precision=precision)
 
     def control(self, strategy_section):
-        precision = 4
         bot = TelegramBot()
         max_coef_delta = 1.2
         sections = self.provider_hyperparams.get_sections()
@@ -41,6 +45,8 @@ class AccountPosition:
                 provider.cancel_all_orders(perp)
                 provider.cancel_all_orders(quart)
 
+                precision = BinanceExecutor.get_precision(perp)
+
                 pos_perp = round(provider.get_amount_positions(perp), precision)
                 pos_quart = round(provider.get_amount_positions(quart), precision)
                 logger.info('Positions: ', extra=dict(pos_perp=pos_perp, pos_quart=pos_quart))
@@ -48,7 +54,8 @@ class AccountPosition:
                 delta = abs(round(pos_perp + pos_quart, precision))
                 logger.info(msg=f'Delta: ', extra=dict(delta=delta))
                 if 0 < delta <= max_coef_delta * limit_amount:
-                    bot.send_message(msg=f'Bad positions. USDT-M. [{perp}: {pos_perp}, {quart}: {pos_quart}]')
+                    bot.send_message(
+                        msg=f'Bad positions. USDT-M. [{perp}: {pos_perp}, {quart}: {pos_quart}, delta: {delta}]')
                     if abs(pos_perp) < abs(pos_quart):
                         self._rebalance(position=pos_quart, provider=provider, ticker=quart, delta=delta,
                                         precision=precision, strategy_section=strategy_section)
@@ -56,8 +63,9 @@ class AccountPosition:
                         self._rebalance(position=pos_perp, provider=provider, ticker=perp, delta=delta,
                                         precision=precision, strategy_section=strategy_section)
                 elif delta > 0 and delta > max_coef_delta * limit_amount:
-                    bot.send_message(msg=f'Stop run. Very bad positions. USDT-M. [{perp}: {pos_perp},'
-                                         f' {quart}: {pos_quart}]')
+                    bot.send_message(
+                        msg=f"""Stop run. Very bad positions. USDT-M. [{perp}: {pos_perp}, 
+                                                                        {quart}: {pos_quart}, {delta}: {delta}]""")
                     logger.error(msg='Very bad positions',
                                  extra=dict(perp=perp, pos_perp=pos_perp, quart=quart, pos_quart=pos_quart))
                     exit(0)
