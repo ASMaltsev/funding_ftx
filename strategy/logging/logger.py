@@ -83,8 +83,10 @@ class CustomAdapter(logging.LoggerAdapter):
         # elastic DB settings
         index_name = 'funding_prod'
         d_type = 'LOGS'
-
-        es.index(index=index_name, doc_type=d_type, body=doc)
+        try:
+            es.index(index=index_name, doc_type=d_type, body=doc)
+        except Exception as e:
+            pass
         return line, kwargs
 
 
