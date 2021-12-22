@@ -14,7 +14,7 @@ class AccountPosition:
 
     @staticmethod
     def _rebalance(position, provider, ticker, delta, precision):
-        side = 'buy' if position < 0 else 'sell'
+        side = 'sell' if position < 0 else 'buy'
         min_size_order = provider.min_size_for_market_order(ticker)
         provider.make_safety_market_order(ticker=ticker, side=side, quantity=delta,
                                           min_size_order=min_size_order,
