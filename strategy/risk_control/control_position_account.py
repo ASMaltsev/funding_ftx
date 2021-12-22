@@ -130,7 +130,7 @@ class AccountPosition:
                 elif delta > 0 and delta > max_coef_delta * limit_amount:
                     bot.send_message(
                         msg=f"""Stop run. Very bad positions. COIN-M. [{perp_ticker}: {pos_perp}, {current_ticker}: {pos_cur},
-                    {next_ticker}, {pos_next}]""")
+                    {next_ticker}: {pos_next}, delta: {delta}]""")
                     logger.error(msg='Very bad positions',
                                  extra=dict(perp_ticker=perp_ticker, pos_perp=pos_perp, current_ticker=current_ticker,
                                             pos_cur=pos_cur, next_ticker=next_ticker, pos_next=pos_next))
