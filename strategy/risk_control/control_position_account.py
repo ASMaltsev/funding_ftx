@@ -20,7 +20,7 @@ class AccountPosition:
                                           min_size_order=min_size_order,
                                           precision=precision)
 
-    def control(self, limit_amount):
+    def control(self):
         precision = 4
         bot = TelegramBot()
         max_coef_delta = 1.2
@@ -32,6 +32,7 @@ class AccountPosition:
             for asset in assets:
                 perp = self.provider_hyperparams.get_ticker_by_asset(section=section, asset=asset, kind='perp')
                 quart = self.provider_hyperparams.get_ticker_by_asset(section=section, asset=asset, kind='quart')
+                limit_amount = self.provider_hyperparams.get_limit_amount(section=section, asset=asset)
                 provider.cancel_all_orders(perp)
                 provider.cancel_all_orders(quart)
 
@@ -76,6 +77,7 @@ class AccountPosition:
                 pos_perp = round(provider.get_amount_positions(perp_ticker), precision)
                 pos_cur = round(provider.get_amount_positions(current_ticker), precision)
                 pos_next = round(provider.get_amount_positions(next_ticker), precision)
+                limit_amount = self.provider_hyperparams.get_limit_amount(section=section, asset=asset)
 
                 logger.info('Positions: ', extra=dict(pos_perp=pos_perp, pos_cur=pos_cur, pos_next=pos_next))
 
@@ -84,7 +86,7 @@ class AccountPosition:
                 logger.info(msg=f'Delta: ', extra=dict(delta=delta))
                 if 0 < delta <= max_coef_delta * limit_amount:
                     bot.send_message(
-                        msg=f"""Bad positions. USDT-M. [{perp_ticker}: {pos_perp}, {current_ticker}: {pos_cur},'
+                        msg=f"""Bad positions. COIN-M. [{perp_ticker}: {pos_perp}, {current_ticker}: {pos_cur},'
                                                             {next_ticker}, {pos_next}]""")
                     if abs(pos_cur + pos_next) < abs(pos_perp):
                         self._rebalance(position=pos_perp, provider=provider, ticker=perp_ticker, delta=delta,
