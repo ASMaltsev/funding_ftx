@@ -165,17 +165,23 @@ class DadExecutor:
                     if strategy_instruction['strategy_section'] == 'exit':
                         rebalancer_instruction['total_amount'] = max(strategy_instruction['total_amount'],
                                                                      rebalancer_instruction['total_amount'])
+
+                        rebalancer_instruction['strategy_section'] = strategy_instruction['strategy_section']
                         update_instructions.append(rebalancer_instruction.copy())
                     elif strategy_instruction['strategy_section'] == 'setup':
                         amount = strategy_instruction['total_amount'] - rebalancer_instruction['total_amount']
                         if amount >= 0:
-                            strategy_instruction['total_amount'] = amount
+                            rebalancer_instruction['strategy_section'] = 'setup'
+
+                            strategy_instruction['strategy_section'] = strategy_instruction['strategy_section']
                             update_instructions.append(strategy_instruction.copy())
                         else:
                             instructions = GeneratePosition().get_close_position_instruction(
                                 section=strategy_instruction['section'],
                                 market_ticker=strategy_instruction['market_ticker'],
                                 limit_ticker=strategy_instruction['limit_ticker'], total_amount=abs(amount))
+
+                            instructions['strategy_section'] = strategy_instruction['strategy_section']
                             update_instructions.append(instructions.copy())
         return update_instructions
 
