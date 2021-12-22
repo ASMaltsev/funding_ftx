@@ -13,14 +13,19 @@ class AccountPosition:
         self.provider_hyperparams = provider_hyperparams
 
     @staticmethod
-    def _rebalance(position, provider, ticker, delta, precision):
-        side = 'sell' if position < 0 else 'buy'
+    def _rebalance(position, provider, ticker, delta, precision, strategy_section):
+
+        if strategy_section == 'exit':
+            side = 'sell' if position < 0 else 'buy'
+        else:
+            side = 'buy' if position < 0 else 'sell'
+
         min_size_order = provider.min_size_for_market_order(ticker)
         provider.make_safety_market_order(ticker=ticker, side=side, quantity=delta,
                                           min_size_order=min_size_order,
                                           precision=precision)
 
-    def control(self):
+    def control(self, strategy_section):
         precision = 4
         bot = TelegramBot()
         max_coef_delta = 1.2
@@ -46,10 +51,10 @@ class AccountPosition:
                     bot.send_message(msg=f'Bad positions. USDT-M. [{perp}: {pos_perp}, {quart}: {pos_quart}]')
                     if abs(pos_perp) < abs(pos_quart):
                         self._rebalance(position=pos_quart, provider=provider, ticker=quart, delta=delta,
-                                        precision=precision)
+                                        precision=precision, strategy_section=strategy_section)
                     else:
                         self._rebalance(position=pos_perp, provider=provider, ticker=perp, delta=delta,
-                                        precision=precision)
+                                        precision=precision, strategy_section=strategy_section)
                 elif delta > 0 and delta > max_coef_delta * limit_amount:
                     bot.send_message(msg=f'Stop run. Very bad positions. USDT-M. [{perp}: {pos_perp},'
                                          f' {quart}: {pos_quart}]')
@@ -90,14 +95,14 @@ class AccountPosition:
                                                             {next_ticker}, {pos_next}]""")
                     if abs(pos_cur + pos_next) < abs(pos_perp):
                         self._rebalance(position=pos_perp, provider=provider, ticker=perp_ticker, delta=delta,
-                                        precision=precision)
+                                        precision=precision, strategy_section=strategy_section)
                     else:
                         if abs(pos_cur) < abs(pos_next):
                             self._rebalance(position=pos_cur, provider=provider, ticker=current_ticker, delta=delta,
-                                            precision=precision)
+                                            precision=precision, strategy_section=strategy_section)
                         else:
                             self._rebalance(position=pos_cur, provider=provider, ticker=current_ticker, delta=delta,
-                                            precision=precision)
+                                            precision=precision, strategy_section=strategy_section)
                 elif delta > 0 and delta > max_coef_delta * limit_amount:
                     bot.send_message(
                         msg=f"""Stop run. Very bad positions. COIN-M. [{perp_ticker}: {pos_perp}, {current_ticker}: {pos_cur},

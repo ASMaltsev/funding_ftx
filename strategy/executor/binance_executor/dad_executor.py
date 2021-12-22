@@ -54,7 +54,8 @@ class DadExecutor:
                 batches = self._generate_batches(executor_instructions, hyperparams_provider)
                 logger.info(msg='Batches: ', extra=dict(batches=batches))
                 for batch in batches:
-                    account_info.control()
+                    account_info.control(batch['strategy_section'])
+                    del batch['strategy_section']
                     BinanceExecutor(self.api_key, self.secret_key, **batch).execute()
 
     def _generate_instructions(self, send_message, hyperparams_provider):
@@ -107,10 +108,6 @@ class DadExecutor:
                     pre_final_instruction['total_amount'] = round(pre_final_instruction['total_amount'],
                                                                   BinanceExecutor.get_precision(
                                                                       pre_final_instruction['limit_ticker']))
-                    try:
-                        del pre_final_instruction['strategy_section']
-                    except KeyError:
-                        pass
                 tmp_instructions.append(pre_final_instruction.copy())
             final_instructions = []
             for final_instruction in tmp_instructions:
