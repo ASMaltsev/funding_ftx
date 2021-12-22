@@ -93,7 +93,7 @@ class AccountPosition:
                                         precision=precision)
                     else:
                         if abs(pos_cur) < abs(pos_next):
-                            self._rebalance(position=pos_cur, provider=provider, ticker=next_ticker, delta=delta,
+                            self._rebalance(position=pos_cur, provider=provider, ticker=current_ticker, delta=delta,
                                             precision=precision)
                         else:
                             self._rebalance(position=pos_cur, provider=provider, ticker=current_ticker, delta=delta,
