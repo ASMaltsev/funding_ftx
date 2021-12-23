@@ -59,12 +59,12 @@ class AccountPosition:
 
                         elif strategy_section == 'exit':
                             self._rebalance(provider=provider, ticker=perp, delta=delta,
-                                            precision=precision, side='sell')
+                                            precision=precision, side='buy')
 
                     else:
                         if strategy_section == 'setup':
                             self._rebalance(provider=provider, ticker=perp, delta=delta,
-                                            precision=precision, side='buy')
+                                            precision=precision, side='sell')
 
                         elif strategy_section == 'exit':
                             self._rebalance(provider=provider, ticker=quart, delta=delta,
