@@ -90,15 +90,17 @@ class FundingAlpha(AbstractAlpha):
                                                                   self.data_provider_coin_m)
 
                 logger.info(msg='Spread:', extra=dict(tickers=pair_coin_m, spread=spread_apr))
+                if spread_apr < 0:
+                    size = 1
+                else:
+                    size = min(1, size)
 
-                size = min(1, size)
-
-                if self.base_fr_earn - spread_apr > self.A:
-                    tte = self.data_provider_coin_m.get_tte(pair_coin_m[1])
-                    if tte <= self.save_time:
-                        size = size
-                    else:
-                        size = 1
+                    if self.base_fr_earn - spread_apr > self.A:
+                        tte = self.data_provider_coin_m.get_tte(pair_coin_m[1])
+                        if tte <= self.save_time:
+                            size = size
+                        else:
+                            size = 1
 
                 if 0 <= size <= 1:
                     state['COIN-M']['actions'][f'{asset}_{quart}'] = ['setup', size * share_coin_m[quart][1],
