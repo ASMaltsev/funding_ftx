@@ -68,7 +68,7 @@ class FundingAlpha(AbstractAlpha):
                                                                   self.data_provider_usdt_m)
 
                 logger.info(msg='Spread:', extra=dict(tickers=pair_usdt_m, spread=spread_apr))
-                if spread_apr < 0:
+                if spread_apr <= 0:
                     size = 1
                 else:
                     size = min(1, size)
@@ -90,7 +90,7 @@ class FundingAlpha(AbstractAlpha):
                                                                   self.data_provider_coin_m)
 
                 logger.info(msg='Spread:', extra=dict(tickers=pair_coin_m, spread=spread_apr))
-                if spread_apr < 0:
+                if spread_apr <= 0:
                     size = 1
                 else:
                     size = min(1, size)
@@ -123,7 +123,8 @@ class FundingAlpha(AbstractAlpha):
     @staticmethod
     def get_clam_size(k, ticker_swap, ticker_quart, data_provider):
         spread_pct, spread_apr = data_provider.get_spread(ticker_swap, ticker_quart)
-        return (k / spread_apr), spread_pct, spread_apr
+        size = (k / spread_apr) if spread_apr != 0 else 1
+        return size, spread_pct, spread_apr
 
     def list_parser(self):
         pairs_usdt_m = []
