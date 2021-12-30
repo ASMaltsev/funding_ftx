@@ -159,8 +159,8 @@ class BinanceDataProvider(AbstractExecutorDataProvider):
 
         spread_pct = (price_quart - price_swap) / price_swap
         tte = self.get_tte(ticker_quart)
+        tte = tte if tte != 0 else 0.0001
         spread_apr = spread_pct * 365 / tte
-
         return spread_pct, spread_apr
 
     def get_tte(self, ticker):
