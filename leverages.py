@@ -4,14 +4,19 @@ from strategy.data_provider import BinanceDataProvider
 
 class Analyze:
 
-    def __init__(self, provider: BinanceDataProvider):
-
+    def __init__(self, provider: BinanceDataProvider, base: list):
         self.provider = provider
+        self.base = base
+
+    def analyze(self, section):
+        if section == 'USDT-M':
+            self.analyze_account_usdt_m()
+        if section == 'COIN-M':
+            self.analyze_account_coin_m()
 
     def analyze_account_coin_m(self):
         account_info = self.provider.get_account_info()
-        bases = ['ETH'] # <------ здесь base коины для коин м написать
-        for base in bases:
+        for base in self.base:
             assets = [base]
             total_balance = {}
             for asset_info in account_info['tickers']:
@@ -53,9 +58,8 @@ class Analyze:
 
     def analyze_account_usdt_m(self):
         account_info = self.provider.get_account_info()
-        print(account_info)
         total_wallet_balance = min(float(account_info['totalWalletBalance']), float(account_info['totalMarginBalance']))
-        assets = ['BTC', 'ETH']
+        assets = self.base
 
         real_leverage_df = pd.DataFrame(index=['perp', 'quart'], columns=assets)
 
@@ -85,7 +89,14 @@ class Analyze:
                                   self.provider.get_price(ticker_2))
 
 
-connector = BinanceDataProvider(
-    api_key='', secret_key='', section='COIN-M') # <------ сюда ключи и секция
 
-Analyze(provider=connector).analyze_account_coin_m() # <-------если секция коин м то анализ коин м, если юсдт м то анализ юсдт м
+for client_name in clients.keys():
+    print(f"LEVERAGES FOR {client_name}; SECTION = {clients[client_name]['section']}")
+
+    connector = BinanceDataProvider(
+        api_key=clients[client_name]['keys']['api_key'], secret_key=clients[client_name]['keys']['secret_key'],
+        section=clients[client_name]['section'])
+
+    Analyze(provider=connector, base=clients[client_name]['coins']).analyze(
+        clients[client_name]['section'])
+    print('---------------------------------------------------------------------------')
