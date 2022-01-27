@@ -54,7 +54,7 @@ class BinanceDataProvider(AbstractExecutorDataProvider):
 
         self.connector = ConnectorRouter(exchange='Binance', section=section).init_connector(api_key, secret_key)
         self.section = section
-        self._correct_coef = 2
+        self._correct_coef = 4
         self.current_rpc = 0
         self.max_rpc = self._get_max_limit()
         self.warning_rpc = False
