@@ -111,7 +111,7 @@ class DadExecutor:
                 tmp_instructions.append(pre_final_instruction.copy())
             final_instructions = []
             for final_instruction in tmp_instructions:
-                if final_instruction['total_amount'] > 0:
+                if final_instruction['total_amount'] > 0 and final_instruction['strategy_section'] != 'setup':
                     final_instructions.append(final_instruction.copy())
 
             logger.info(msg='Final instructions:', extra=dict(final_instructions=final_instructions))
@@ -195,6 +195,6 @@ class DadExecutor:
                     min_batch_size = hyperparams_provider.get_min_batch_size(instruction['section'], asset)
                     limit_amount = hyperparams_provider.get_limit_amount(section=instruction['section'], asset=asset)
                     break
-            instruction['total_amount'] = min(min_batch_size, instruction['total_amount'])
+            instruction['total_amount'] = min(min_batch_size, instruction['total_amount']) if instruction['strategy_section'] != 'exit' else instruction['total_amount']
             instruction['limit_amount'] = limit_amount
         return instructions
