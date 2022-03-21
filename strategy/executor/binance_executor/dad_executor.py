@@ -112,6 +112,7 @@ class DadExecutor:
             final_instructions = []
             for final_instruction in tmp_instructions:
                 if final_instruction['total_amount'] > 0 and final_instruction['strategy_section'] != 'setup':
+                    print(final_instruction)
                     final_instructions.append(final_instruction.copy())
 
             logger.info(msg='Final instructions:', extra=dict(final_instructions=final_instructions))
