@@ -109,9 +109,11 @@ class DadExecutor:
                                                                   BinanceExecutor.get_precision(
                                                                       pre_final_instruction['limit_ticker']))
                 tmp_instructions.append(pre_final_instruction.copy())
+            print(tmp_instructions)
             final_instructions = []
             for final_instruction in tmp_instructions:
                 if final_instruction['total_amount'] > 0:
+                    print(final_instruction)
                     final_instructions.append(final_instruction.copy())
 
             logger.info(msg='Final instructions:', extra=dict(final_instructions=final_instructions))
