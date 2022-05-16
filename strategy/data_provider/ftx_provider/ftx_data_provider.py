@@ -10,7 +10,7 @@ from strategy.data_provider.abstract_provider.abstract_data_provider import Abst
 logger = Logger('DataProviderExecutor').create()
 
 
-class BinanceDataProvider(AbstractExecutorDataProvider):
+class FtxDataProvider(AbstractExecutorDataProvider):
 
     def __init__(self, api_key: str, secret_key: str, section: str, ws_provider=None):
         super().__init__(api_key, secret_key)

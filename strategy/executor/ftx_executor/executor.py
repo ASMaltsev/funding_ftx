@@ -2,7 +2,7 @@ import time
 import sys
 import requests
 from strategy.executor.abstract_executor import AbstractExecutor
-from strategy.data_provider import BinanceDataProvider
+from strategy.data_provider import FtxDataProvider
 from strategy.logging import Logger, send_log
 
 my_logger = Logger('Executor')
@@ -14,7 +14,7 @@ class FtxExecutor(AbstractExecutor):
     def __init__(self, api_key: str, secret_key: str, section: str, market_ticker: str, limit_ticker: str,
                  limit_side: str, market_side: str, total_amount: float, reduce_only: bool, limit_amount: float):
 
-        self.data_provider = BinanceDataProvider(section=section, api_key=api_key, secret_key=secret_key)
+        self.data_provider = FtxDataProvider(section=section, api_key=api_key, secret_key=secret_key)
 
         self.limit_amount = limit_amount
         self.start_amount_limit = 0
