@@ -1,11 +1,11 @@
 import psycopg2 as ps
-from strategy.others import USER_NAME, USER_PASS, HOST_DB
 
 
 class DataBaseProvider:
 
     def __init__(self):
-        self.connection = ps.connect(dbname='funding_db', user=USER_NAME,
+        self.connection = ps.connect(dbname='funding_db',
+                                     user=USER_NAME,
                                      password=USER_PASS,
                                      host=HOST_DB,
                                      port='5432')

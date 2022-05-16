@@ -130,7 +130,7 @@ class FtxDataProvider(AbstractExecutorDataProvider):
                                                 reduce_only=reduce_only)
             time.sleep(0.1)
             status, executed_qty = self.get_order_status(ticker=ticker, order_id=order_id)
-            if status != 'EXPIRED':
+            if status != 'EXPIRED' and status != 'CANCELED':
                 logger.info(msg='Order status for limit order.',
                             extra=dict(order_id=order_id, order_status=status, executed_qty=executed_qty))
                 return status, order_id, price, executed_qty
