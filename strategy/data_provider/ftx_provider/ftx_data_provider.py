@@ -1,7 +1,7 @@
 import time
 from datetime import datetime
 from typing import Tuple
-from safeconnectors.router import ConnectorRouter
+from connectors.router import ConnectorRouter
 import connectors
 from strategy.logging import Logger
 from strategy.others import inverse_operation
@@ -10,63 +10,19 @@ from strategy.data_provider.abstract_provider.abstract_data_provider import Abst
 logger = Logger('DataProviderExecutor').create()
 
 
-def _control_rpc(current_rpc, max_rpc, connector) -> bool:
-    """
-    @param current_rpc: current rpc
-    @param max_rpc: maximum rpc
-    @return: Is warning rpc?
-    """
-    warning_min = 0.7
-    warning_max = 0.95
-    bad_rpc = False
-    while True:
-        if current_rpc > warning_max * max_rpc:
-            bad_rpc = True
-            sleep = 60
-            logger.error(msg='You used all RPC. Sleep ',
-                         extra=dict(current_rpc=current_rpc, max_rpc=max_rpc, sleep=sleep))
-            time.sleep(sleep)
-            connector.get_server_time()
-            current_rpc = connector.USED_RPC
-        if warning_min * max_rpc < current_rpc < warning_max * max_rpc:
-            logger.warning(msg='You used a lot of RPC', extra=dict(current_rpc=current_rpc, max_rpc=max_rpc))
-            if not bad_rpc:
-                return True
-        return False
-
-
-def update_rpc(func):
-    def wrapper_rpc(*args, **kwargs):
-        args[0].current_rpc = args[0].connector.USED_RPC
-        current_rpc = args[0].current_rpc
-        max_rpc = args[0].max_rpc
-        warning_rpc = _control_rpc(current_rpc, max_rpc, args[0].connector)
-        args[0].warning_rpc = warning_rpc
-        return func(*args, **kwargs)
-
-    return wrapper_rpc
-
-
 class BinanceDataProvider(AbstractExecutorDataProvider):
 
     def __init__(self, api_key: str, secret_key: str, section: str, ws_provider=None):
         super().__init__(api_key, secret_key)
 
-        self.connector = ConnectorRouter(exchange='Binance', section=section).init_connector(api_key, secret_key)
+        self.connector = ConnectorRouter(exchange='FTX', section='').init_connector(api_key, secret_key,
+                                                                                    subaccount='HASH_CIB_ALGO_USD_SP')
         self.section = section
         self._correct_coef = 4
         self.current_rpc = 0
-        self.max_rpc = self._get_max_limit()
         self.warning_rpc = False
-        self.ws = None
-        self.ws_provider = ws_provider
+        # self.ws_provider = ws_provider
 
-    def _get_max_limit(self) -> int:
-        for type_limit in self.connector.get_exchange_info()['rateLimits']:
-            if type_limit['rateLimitType'] == 'REQUEST_WEIGHT' and type_limit['interval'] == 'MINUTE':
-                return int(type_limit['limit'])
-
-    @update_rpc
     def make_limit_order(self, ticker: str, side: str, price: float, quantity: float, reduce_only: bool) \
             -> Tuple[int, str]:
         if quantity > 0:
@@ -77,42 +33,34 @@ class BinanceDataProvider(AbstractExecutorDataProvider):
         else:
             return -1, 'FILLED'
 
-    @update_rpc
     def get_account_info(self):
         return self.connector.get_account_info()
 
-    @update_rpc
     def get_balance(self, ticker):
         return self.connector.get_balances(symbol=ticker)
 
-    @update_rpc
     def get_price(self, ticker):
         return self.connector.get_price(ticker=ticker)
 
-    @update_rpc
     def get_contract_size(self, ticker):
         for symbols_info in self.connector.get_exchange_info()['symbols']:
             if symbols_info['symbol'] == ticker:
                 return float(symbols_info['contractSize'])
         return 0
 
-    @update_rpc
     def get_exchange_info(self):
         return self.connector.get_exchange_info()
 
-    @update_rpc
     def make_market_order(self, ticker: str, side: str, quantity: float) -> bool:
         response = self.connector.make_market_order(ticker=ticker, side=side, quantity=quantity)
         status = str(response.get('status', None))
         return status == 'NEW'
 
-    @update_rpc
     def cancel_all_orders(self, ticker: str) -> bool:
         if self.connector.cancel_all_orders(ticker=ticker)['code'] == 200:
             return True
         return False
 
-    @update_rpc
     def cancel_order(self, ticker: str, order_id: int) -> bool:
         try:
             response = self.connector.cancel_order(ticker=ticker, order_id=order_id)
@@ -122,18 +70,16 @@ class BinanceDataProvider(AbstractExecutorDataProvider):
         except connectors.exceptions.RequestError as e:
             if str(e).find('-2011') > 0:  # {'code': -2011, 'msg': 'Unknown order sent.'}
                 return True
+        except Exception as e:
             return False
 
-    @update_rpc
     def get_amount_positions(self, ticker: str) -> float:
         return self.connector.get_positions(ticker=ticker)[0]['positionAmt']
 
-    @update_rpc
     def get_bbid_bask(self, ticker: str) -> Tuple[float, float]:
-        response = self.ws_provider.get_state()
-        return float(response.get('b', None)), float(response.get('a', None))
+        response = self.connector.get_orderbook(ticker, limits=1)
+        return float(response.get('bids')[0][0]), float(response.get('asks')[0][0])
 
-    @update_rpc
     def get_order_status(self, ticker: str, order_id: int) -> Tuple[str, float]:
         for _ in range(10):
             try:
@@ -144,7 +90,6 @@ class BinanceDataProvider(AbstractExecutorDataProvider):
                     time.sleep(0.1)
         raise Exception('Order does not exist.')
 
-    @update_rpc
     def get_mid_price(self, ticker):
         bbid_bask = self.connector.get_bbid_bask(ticker)
         bbid = float(bbid_bask['bidPrice'])
@@ -152,7 +97,6 @@ class BinanceDataProvider(AbstractExecutorDataProvider):
         mid_price = (bbid + bask) / 2
         return mid_price
 
-    @update_rpc
     def get_spread(self, ticker_swap, ticker_quart):
         price_swap = self.get_price(ticker_swap)
         price_quart = self.get_price(ticker_quart)
@@ -173,7 +117,6 @@ class BinanceDataProvider(AbstractExecutorDataProvider):
         tte = (date - datetime.utcnow()).days
         return tte
 
-    @update_rpc
     def make_safety_limit_order(self, ticker: str, side: str, quantity: float, reduce_only: bool) \
             -> Tuple[str, int, float, float]:
         """
@@ -182,8 +125,6 @@ class BinanceDataProvider(AbstractExecutorDataProvider):
         """
         side_index = 1 if side == 'sell' else 0
         while True:
-            time.sleep(0.3)
-
             price = self.get_bbid_bask(ticker)[side_index]
             order_id, _ = self.make_limit_order(ticker=ticker, side=side, price=price, quantity=quantity,
                                                 reduce_only=reduce_only)
@@ -194,7 +135,6 @@ class BinanceDataProvider(AbstractExecutorDataProvider):
                             extra=dict(order_id=order_id, order_status=status, executed_qty=executed_qty))
                 return status, order_id, price, executed_qty
 
-    @update_rpc
     def make_safety_market_order(self, ticker: str, side: str, quantity: float, min_size_order: float,
                                  precision) -> bool:
         """
@@ -219,15 +159,8 @@ class BinanceDataProvider(AbstractExecutorDataProvider):
             elif str(e).find('-4003') > 0:  # {'code': -4003, 'msg': 'Quantity less than zero.'}
                 return True
 
-    @update_rpc
     def min_size_for_market_order(self, ticker):
-        for symbol_info in self.connector.get_exchange_info()['symbols']:
-            if symbol_info['symbol'] == ticker:
-                filters = symbol_info['filters']
-                for f in filters:
-                    if f.get('minQty') is not None:
-                        return f['minQty']
+        return 0.00001
 
-    @update_rpc
     def get_available_balance(self, ticker, section):
         pass

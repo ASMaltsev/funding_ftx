@@ -1,3 +1,3 @@
-from strategy.executor.binance_executor import DadExecutor
+from strategy.executor.ftx_executor import DadExecutor
 
 __all__ = ['DadExecutor']

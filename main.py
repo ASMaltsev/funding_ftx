@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 
-from strategy.executor import DadExecutor
-from strategy.others.constants import Keys
+from strategy.executor.ftx_executor.executor import FtxExecutor
 
-keys = Keys()
+api_key = ''
+secret_key = ''
 
-DadExecutor(api_key=keys.API_KEY, secret_key=keys.SECRET_KEY).execute()
+FtxExecutor(api_key=api_key, secret_key=secret_key, section='', market_ticker='BTC-0624',
+            limit_ticker='BTC-PERP', limit_side='SELL', market_side='BUY', total_amount=0.001,
+            reduce_only=False, limit_amount=0.0001).execute()

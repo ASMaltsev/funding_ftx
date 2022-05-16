@@ -1,6 +1,6 @@
 import sys
 import time
-from strategy.data_provider.binanace_provider.binance_data_provider import BinanceDataProvider
+from strategy.data_provider.ftx_provider.binance_data_provider import BinanceDataProvider
 from strategy.logging import Logger
 from strategy.risk_control import RealStatePositions, Rebalancer
 from strategy.translation import TranslateStrategyInstructions, TranslateLeverage
@@ -8,7 +8,7 @@ from strategy.alpha import FundingAlpha
 from strategy.hyperparams import HyperParams
 from strategy.risk_control import TelegramBot
 from strategy.risk_control import AccountPosition
-from strategy.executor.binance_executor.executor import BinanceExecutor
+from strategy.executor.ftx_executor.executor import FtxExecutor
 from strategy.translation import GeneratePosition
 
 logger = Logger('DadExecutor').create()
@@ -56,7 +56,7 @@ class DadExecutor:
                 for batch in batches:
                     account_info.control(batch['strategy_section'])
                     del batch['strategy_section']
-                    BinanceExecutor(self.api_key, self.secret_key, **batch).execute()
+                    FtxExecutor(self.api_key, self.secret_key, **batch).execute()
 
     def _generate_instructions(self, send_message, hyperparams_provider):
         phrase = 'skip'
@@ -106,7 +106,7 @@ class DadExecutor:
             for pre_final_instruction in union_instructions:
                 if pre_final_instruction['total_amount'] > 0:
                     pre_final_instruction['total_amount'] = round(pre_final_instruction['total_amount'],
-                                                                  BinanceExecutor.get_precision(
+                                                                  FtxExecutor.get_precision(
                                                                       pre_final_instruction['limit_ticker']))
                 tmp_instructions.append(pre_final_instruction.copy())
             print(tmp_instructions)

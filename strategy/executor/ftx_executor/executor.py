@@ -3,21 +3,18 @@ import sys
 import requests
 from strategy.executor.abstract_executor import AbstractExecutor
 from strategy.data_provider import BinanceDataProvider
-from strategy.data_provider.binanace_provider.binance_data_provider_ws import BinanceWsDataProvider
 from strategy.logging import Logger, send_log
 
 my_logger = Logger('Executor')
 logger = my_logger.create()
 
 
-class BinanceExecutor(AbstractExecutor):
+class FtxExecutor(AbstractExecutor):
 
     def __init__(self, api_key: str, secret_key: str, section: str, market_ticker: str, limit_ticker: str,
                  limit_side: str, market_side: str, total_amount: float, reduce_only: bool, limit_amount: float):
-        self.ws_provider = BinanceWsDataProvider(section=section, ticker=limit_ticker)
-        self.ws_provider.start()
-        self.data_provider = BinanceDataProvider(section=section, api_key=api_key, secret_key=secret_key,
-                                                 ws_provider=self.ws_provider)
+
+        self.data_provider = BinanceDataProvider(section=section, api_key=api_key, secret_key=secret_key)
 
         self.limit_amount = limit_amount
         self.start_amount_limit = 0
@@ -29,13 +26,7 @@ class BinanceExecutor(AbstractExecutor):
         self.total_amount = total_amount
         self.reduce_only = reduce_only
         self.current_amount_qty = 0
-        self.precision = self.get_precision(self.limit_ticker)
-
-    def _work_before_new_limit_order(self, min_size_order):
-        logger.info(msg='Rate limits:',
-                    extra=dict(current_rpc=self.data_provider.current_rpc, max_rpc=self.data_provider.max_rpc))
-        self._control_rpc()
-        self._log_current_positions(min_size_order)
+        self.precision = 5
 
     def check_positions(self, min_size_order):
         max_coef_delta = 1.2
@@ -114,10 +105,9 @@ class BinanceExecutor(AbstractExecutor):
         raise NotImplementedError
 
     def execute(self) -> bool:
-        time.sleep(10)
         try:
-            self.start_amount_limit = self.data_provider.get_amount_positions(self.limit_ticker)
-            self.start_amount_market = self.data_provider.get_amount_positions(self.market_ticker)
+            self.start_amount_limit = 0
+            self.start_amount_market = 0
 
             prev_executed_qty = 0
             min_size_market_order = self.data_provider.min_size_for_market_order(ticker=self.market_ticker)
@@ -135,7 +125,6 @@ class BinanceExecutor(AbstractExecutor):
                                    start_amount_market=self.start_amount_market, precision=self.precision,
                                    limit_amount=self.limit_amount))
 
-            self._work_before_new_limit_order(min_size_market_order)
             order_status, order_id, price_limit_order, executed_qty = self.data_provider.make_safety_limit_order(
                 ticker=self.limit_ticker,
                 side=self.limit_side,
@@ -165,7 +154,6 @@ class BinanceExecutor(AbstractExecutor):
 
                     prev_executed_qty = 0
 
-                    self._work_before_new_limit_order(min_size_market_order)
                     order_status, order_id, price_limit_order, executed_qty = self.data_provider. \
                         make_safety_limit_order(ticker=self.limit_ticker,
                                                 side=self.limit_side,
@@ -215,7 +203,6 @@ class BinanceExecutor(AbstractExecutor):
 
                             prev_executed_qty = 0
 
-                            self._work_before_new_limit_order(min_size_market_order)
                             order_status, order_id, price_limit_order, executed_qty = \
                                 self.data_provider.make_safety_limit_order(ticker=self.limit_ticker,
                                                                            side=self.limit_side,
@@ -234,7 +221,6 @@ class BinanceExecutor(AbstractExecutor):
             self.execute()
 
         except Exception as e:
-            logger.error(msg=str(e))
+            logger.exception(msg=str(e))
         finally:
-            self.ws_provider.stop()
             send_log()
