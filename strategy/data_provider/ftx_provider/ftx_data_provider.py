@@ -12,12 +12,11 @@ logger = Logger('DataProviderExecutor').create()
 
 class FtxDataProvider(AbstractExecutorDataProvider):
 
-    def __init__(self, api_key: str, secret_key: str, section: str):
+    def __init__(self, api_key: str, secret_key: str):
         super().__init__(api_key, secret_key)
 
         self.connector = ConnectorRouter(exchange='FTX', section='').init_connector(api_key, secret_key,
                                                                                     subaccount='HASH_CIB_ALGO_USD_SP')
-        self.section = section
         self._correct_coef = 4
         self.current_rpc = 0
 
@@ -26,8 +25,9 @@ class FtxDataProvider(AbstractExecutorDataProvider):
         if quantity > 0:
             response = self.connector.make_limit_order(ticker=ticker, side=side.lower(), price=price,
                                                        quantity=quantity,
-                                                       reduce_only=reduce_only,
-                                                       postOnly=True)
+                                                       reduceOnly=reduce_only,
+                                                       postOnly=True,
+                                                       reduce_only=True)
             return int(response.get('orderId', None)), str(response.get('status', None))
         else:
             return -1, 'FILLED'
@@ -62,13 +62,17 @@ class FtxDataProvider(AbstractExecutorDataProvider):
 
     def cancel_order(self, ticker: str, order_id: int) -> bool:
         try:
-            response = self.connector.cancel_order(ticker=ticker, order_id=order_id)
+            self.connector.cancel_order(ticker=ticker, order_id=order_id)
+            response = self.connector.status_order(ticker=ticker, order_id=order_id)
             if response['status'] == 'CANCELED':
                 return True
             return False
         except Exception as e:
             logger.exception(e)
-            return True
+            response = self.connector.status_order(ticker=ticker, order_id=order_id)
+            if response['status'] == 'CANCELED':
+                return True
+            return False
 
     def get_amount_positions(self, ticker: str) -> float:
         return self.connector.get_positions(ticker=ticker)[0]['positionAmt']

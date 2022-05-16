@@ -11,10 +11,10 @@ logger = my_logger.create()
 
 class FtxExecutor(AbstractExecutor):
 
-    def __init__(self, api_key: str, secret_key: str, section: str, market_ticker: str, limit_ticker: str,
+    def __init__(self, api_key: str, secret_key: str, market_ticker: str, limit_ticker: str,
                  limit_side: str, market_side: str, total_amount: float, reduce_only: bool, limit_amount: float):
 
-        self.data_provider = FtxDataProvider(section=section, api_key=api_key, secret_key=secret_key)
+        self.data_provider = FtxDataProvider(api_key=api_key, secret_key=secret_key)
 
         self.limit_amount = limit_amount
         self.start_amount_limit = 0
@@ -31,9 +31,6 @@ class FtxExecutor(AbstractExecutor):
     def check_positions(self, min_size_order):
         max_coef_delta = 1.2
         time.sleep(0.1)
-        self.data_provider.cancel_all_orders(self.limit_ticker)
-        self.data_provider.cancel_all_orders(self.market_ticker)
-        time.sleep(0.2)
 
         pos_limit_side, pos_market_side = 0, 0
         for _ in range(3):
@@ -89,6 +86,7 @@ class FtxExecutor(AbstractExecutor):
 
             prev_executed_qty = 0
             min_size_market_order = self.data_provider.min_size_for_market_order(ticker=self.market_ticker)
+            self.check_positions(self.data_provider.min_size_for_market_order(min_size_market_order))
 
             limit_qty = round(
                 min(self.limit_amount, self.total_amount - self.current_amount_qty),
@@ -108,6 +106,7 @@ class FtxExecutor(AbstractExecutor):
                 side=self.limit_side,
                 quantity=limit_qty,
                 reduce_only=self.reduce_only)
+
 
             while True:
 

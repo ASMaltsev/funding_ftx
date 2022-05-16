@@ -5,23 +5,16 @@ class DataBaseProvider:
 
     def __init__(self):
         self.connection = ps.connect(dbname='funding_db',
-                                     user=USER_NAME,
-                                     password=USER_PASS,
-                                     host=HOST_DB,
+                                     user="",
+                                     password="",
+                                     host="",
                                      port='5432')
 
         self.cursor = self.connection.cursor()
 
-    def get_strategy_hyperparams(self, client_name: str, section: str) -> dict:
+    def get_params(self, client_name: str) -> dict:
         self.cursor.execute(
-            f"""SELECT strategy_hyperparams FROM client_params WHERE name = '{client_name}' AND section = '{section}';
-            """)
-        return self.cursor.fetchone()[0]
-
-    def get_account_hyperparams(self, client_name: str, section: str) -> dict:
-        self.cursor.execute(
-            f"""SELECT account_hyperparams FROM client_params WHERE name = '{client_name}' AND section = '{section}';
-            """)
+            f"""SELECT params FROM ftx WHERE name = '{client_name}';""")
         return self.cursor.fetchone()[0]
 
     def close(self):
