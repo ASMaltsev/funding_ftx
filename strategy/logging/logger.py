@@ -2,13 +2,9 @@ import telebot
 import signal
 import logging
 from datetime import datetime
-from strategy.others import LABEL, HOSTS, SECTION, ELASTIC_NAME, ELASTIC_PASS
-from elasticsearch import Elasticsearch
 
-file_path = f'{LABEL}_{SECTION}_{datetime.utcnow().replace(microsecond=0, second=0)}.log'
+file_path = f'{datetime.utcnow().replace(microsecond=0, second=0)}.log'
 flag = False
-
-es = Elasticsearch(HOSTS, http_auth=(ELASTIC_NAME, ELASTIC_PASS))
 
 
 def send_log():
@@ -34,59 +30,16 @@ class CustomAdapter(logging.LoggerAdapter):
 
     def process(self, msg, kwargs):
         dict_kwargs = kwargs.get('extra', '')
-        max_rpc = 0
-        current_rpc = 0
-        delta = 0
-        market_amount = 0
-        limit_amount = 0
         line_kwargs = ''
         if dict_kwargs != '':
             line_kwargs = ', '.join(map(str, [f'{k} = {v}' for k, v in dict_kwargs.items()]))
         line = '%s %s' % (msg, line_kwargs)
 
-        if msg == 'Rate limits:':
-            current_rpc = dict_kwargs['current_rpc']
-            max_rpc = dict_kwargs['max_rpc']
-        elif msg == 'CHECK POSITION.':
-            delta = dict_kwargs['delta']
-        elif msg == 'Current positions with correction on initial positions:':
-            limit_amount = dict_kwargs['limit_amount']
-            market_amount = dict_kwargs['market_amount']
-        elif msg == 'Current positions:':
-            limit_amount = dict_kwargs['limit_amount']
-            market_amount = dict_kwargs['market_amount']
-            delta = dict_kwargs['delta']
-
-        """
-          sending logs to grafana
-        """
-        robot = 'EXECUTOR'  # problems
-
         if msg is None:
             msg = 'empty'
         if msg == '':
             msg = 'empty'
-        doc = {
-            'timestamp': datetime.utcnow(),
-            'robot': robot,
-            'Msg': str(msg),
-            'body': line_kwargs,
-            'limit_amount': limit_amount,
-            'market_amount': market_amount,
-            'delta': delta,
-            'current_rpc': current_rpc,
-            'max_rpc': max_rpc,
-            'label': LABEL + '_' + SECTION,
-        }
-        # CLIENT_NAME - name container
 
-        # elastic DB settings
-        index_name = 'funding_prod'
-        d_type = 'LOGS'
-        try:
-            es.index(index=index_name, doc_type=d_type, body=doc)
-        except Exception as e:
-            pass
         return line, kwargs
 
 
