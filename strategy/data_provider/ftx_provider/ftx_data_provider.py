@@ -68,7 +68,7 @@ class FtxDataProvider(AbstractExecutorDataProvider):
             return False
         except Exception as e:
             logger.exception(e)
-            return False
+            return True
 
     def get_amount_positions(self, ticker: str) -> float:
         return self.connector.get_positions(ticker=ticker)[0]['positionAmt']
