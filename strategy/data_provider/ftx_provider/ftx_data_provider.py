@@ -66,10 +66,8 @@ class FtxDataProvider(AbstractExecutorDataProvider):
             if response['status'] == 'CANCELED':
                 return True
             return False
-        except connectors.exceptions.RequestError as e:
-            if str(e).find('-2011') > 0:  # {'code': -2011, 'msg': 'Unknown order sent.'}
-                return True
         except Exception as e:
+            logger.exception(e)
             return False
 
     def get_amount_positions(self, ticker: str) -> float:
