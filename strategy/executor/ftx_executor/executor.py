@@ -26,7 +26,7 @@ class FtxExecutor(AbstractExecutor):
         self.total_amount = total_amount
         self.reduce_only = reduce_only
         self.current_amount_qty = 0
-        self.precision = 5
+        self.precision = 3
 
     def check_positions(self, min_size_order):
         max_coef_delta = 1.2
