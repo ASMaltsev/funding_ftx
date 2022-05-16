@@ -66,10 +66,6 @@ class FtxExecutor(AbstractExecutor):
             logger.error(msg="REBALANCE FALSE")
             sys.exit(0)
 
-    def _control_rpc(self):
-        if self.data_provider.warning_rpc:
-            time.sleep(30)
-
     def _log_current_positions(self, min_size_order):
         time.sleep(0.2)
         limit_amount = self.data_provider.get_amount_positions(self.limit_ticker)
@@ -85,24 +81,6 @@ class FtxExecutor(AbstractExecutor):
         if delta > 0:
             logger.error(msg='Delta positions > 0. Stopped.', extra=dict(delta=delta))
             self.check_positions(min_size_order)
-
-    @staticmethod
-    def get_precision(ticker: str) -> int:
-        """
-        @param ticker: pair name
-        @return: amount for one limit order
-        """
-        if ticker.startswith('BTCUSDT'):
-            return 3
-        elif ticker.startswith('ETHUSDT'):
-            return 3
-        elif ticker.startswith('BTCUSD'):
-            return 0
-        elif ticker.startswith('ETHUSD'):
-            return 0
-        elif ticker.startswith('BNBUSD'):
-            return 0
-        raise NotImplementedError
 
     def execute(self) -> bool:
         try:
