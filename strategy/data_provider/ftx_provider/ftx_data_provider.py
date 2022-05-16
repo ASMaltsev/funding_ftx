@@ -12,7 +12,7 @@ logger = Logger('DataProviderExecutor').create()
 
 class FtxDataProvider(AbstractExecutorDataProvider):
 
-    def __init__(self, api_key: str, secret_key: str, section: str, ws_provider=None):
+    def __init__(self, api_key: str, secret_key: str, section: str):
         super().__init__(api_key, secret_key)
 
         self.connector = ConnectorRouter(exchange='FTX', section='').init_connector(api_key, secret_key,
@@ -20,15 +20,14 @@ class FtxDataProvider(AbstractExecutorDataProvider):
         self.section = section
         self._correct_coef = 4
         self.current_rpc = 0
-        self.warning_rpc = False
-        # self.ws_provider = ws_provider
 
     def make_limit_order(self, ticker: str, side: str, price: float, quantity: float, reduce_only: bool) \
             -> Tuple[int, str]:
         if quantity > 0:
             response = self.connector.make_limit_order(ticker=ticker, side=side.lower(), price=price,
                                                        quantity=quantity,
-                                                       reduce_only=reduce_only)
+                                                       reduce_only=reduce_only,
+                                                       postOnly=True)
             return int(response.get('orderId', None)), str(response.get('status', None))
         else:
             return -1, 'FILLED'
@@ -160,7 +159,7 @@ class FtxDataProvider(AbstractExecutorDataProvider):
                 return True
 
     def min_size_for_market_order(self, ticker):
-        return 0.00001
+        return 0.001
 
     def get_available_balance(self, ticker, section):
         pass
